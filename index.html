@@ -46,6 +46,25 @@
   .period-btn:hover{background:var(--bg);}
   .period-btn.active{background:var(--root);color:#fff;}
   .data-status::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--text-dimmer);flex:none;}
+
+  .events-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 10px;line-height:1.6;background:#fff;border:1px solid var(--line);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .events-btn:hover{background:var(--cyan);color:#fff;border-color:var(--cyan);}
+
+  .events-overlay{position:fixed;inset:0;z-index:60;background:rgba(27,32,39,0.45);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .events-overlay[hidden]{display:none;}
+  .events-modal{background:#fff;border-radius:12px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(27,32,39,0.25);}
+  .events-modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--line);}
+  .events-modal-head h3{margin:0;font-family:var(--font-display);font-size:16px;font-weight:600;}
+  .events-modal-sub{margin:3px 0 0;font-family:var(--font-mono);font-size:11px;color:var(--text-dimmer);}
+  .events-close{border:none;background:none;font-size:22px;line-height:1;color:var(--text-dimmer);cursor:pointer;padding:2px 6px;border-radius:6px;}
+  .events-close:hover{background:var(--bg);color:var(--text);}
+  .events-modal-body{overflow-y:auto;padding:8px 12px 16px;}
+  .events-row{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:6px;}
+  .events-row:hover{background:var(--bg);}
+  .events-row .en{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .events-row .ec{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .events-key{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase;color:#B8860B;background:#FBF1DA;border:1px solid #F0DCB8;border-radius:10px;padding:1px 7px;flex:none;}
+  .events-empty{padding:24px 12px;text-align:center;color:var(--text-dimmer);font-size:13px;}
   .data-status.is-live{color:#1E8A6E;border-color:#BFE3D4;background:#F1FAF6;}
   .data-status.is-live::before{background:#1E8A6E;}
   .data-status.is-fallback{color:var(--amber);border-color:#F0DCB8;background:#FBF5EA;}
@@ -132,9 +151,11 @@
     <div class="period-row">
       <p class="data-status" id="dataStatus">Loading…</p>
       <div class="period-toggle" role="group" aria-label="Reporting period">
-        <button class="period-btn" data-months="0" type="button">This month</button>
-        <button class="period-btn" data-months="1" type="button">Last month</button>
+        <button class="period-btn" data-mode="month" data-value="0" type="button">This month</button>
+        <button class="period-btn" data-mode="month" data-value="1" type="button">Last month</button>
+        <button class="period-btn" data-mode="range" data-value="6" type="button">Last 6 months</button>
       </div>
+      <button class="events-btn" id="eventsBtn" type="button">Events ↗</button>
     </div>
     <div class="legend">
       <span class="legend-item"><span class="swatch" style="background:var(--root)"></span>Homepage</span>
@@ -172,6 +193,19 @@
 </div>
 
 <div id="tooltip"></div>
+
+<div class="events-overlay" id="eventsOverlay" hidden>
+  <div class="events-modal" role="dialog" aria-label="Events">
+    <div class="events-modal-head">
+      <div>
+        <h3>Events</h3>
+        <p class="events-modal-sub" id="eventsModalPeriod"></p>
+      </div>
+      <button class="events-close" id="eventsClose" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="events-modal-body" id="eventsModalBody"></div>
+  </div>
+</div>
 
 <script>
 /* ---------------------------------------------------------
@@ -473,8 +507,18 @@ const linkSel = svg.append('g').attr('fill','none')
 const nodeG = svg.append('g').selectAll('g')
   .data(graph.nodes)
   .join('g')
-  .style('cursor', d => d.url ? 'pointer' : 'grab')
-  .on('click', (evt, d) => { lockHighlight(d); if (d.url) window.open(d.url, '_blank', 'noopener'); });
+  .style('cursor', d => d.url ? 'pointer' : 'grab');
+
+// A generous invisible hit area — covers the bar AND the label text
+// beside it, with a sensible minimum height — so clicking anywhere
+// near a page (not just precisely on its often-thin bar) opens it.
+nodeG.append('rect')
+  .attr('class', 'hit-rect')
+  .attr('x', d => d.x0)
+  .attr('y', d => Math.min(d.y0, (d.y0 + d.y1) / 2 - 12))
+  .attr('width', d => (d.x1 - d.x0) + 230)
+  .attr('height', d => Math.max(d.y1 - d.y0, 24))
+  .attr('fill', 'transparent');
 
 nodeG.append('rect')
   .attr('class','node-rect')
@@ -493,6 +537,7 @@ nodeG.append('text')
   .attr('font-size', d => d.depth === 0 ? 14 : d.depth === 1 ? 12.5 : 11.5)
   .attr('font-weight', d => d.depth === 0 ? 600 : 500)
   .attr('dominant-baseline', 'middle')
+  .attr('pointer-events', 'none')
   .text(d => d.depth === 0 ? 'All sessions' : d.label)
   .filter(d => !!d.url)
   .append('tspan')
@@ -501,12 +546,17 @@ nodeG.append('text')
     .attr('font-size', '0.8em')
     .text('↗');
 
-nodeG.append('text')
+// The exact count stays visible for the root and entry-page columns
+// (the headline numbers) but is dropped from the busiest "Then"
+// column to keep that part of the chart calmer — it's always still
+// in the tooltip and, for entry pages, the side-nav.
+nodeG.filter(d => d.depth <= 1).append('text')
   .attr('class','lbl-val')
   .attr('x', d => d.x1 + 7)
-  .attr('y', d => (d.y0 + d.y1) / 2 + (d.depth <= 1 ? 11 : 9))
-  .attr('font-size', d => d.depth <= 1 ? 10.5 : 9)
+  .attr('y', d => (d.y0 + d.y1) / 2 + 11)
+  .attr('font-size', 10.5)
   .attr('dominant-baseline', 'middle')
+  .attr('pointer-events', 'none')
   .text(d => d.count.toLocaleString() + (d.depth === 0 ? ' sessions' : ''));
 
 /* ---------------------------------------------------------
@@ -530,7 +580,7 @@ function hideTip(){ tooltip.classList.remove('show'); }
 
 function dim(exceptLinks, exceptNodes){
   linkSel.attr('stroke-opacity', d => exceptLinks.has(d) ? 0.85 : 0.06);
-  nodeG.selectAll('rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
+  nodeG.selectAll('.node-rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
 }
 function resetDim(){
   // If a page is "locked" (clicked from the side list), falling back
@@ -538,7 +588,7 @@ function resetDim(){
   // that lock rather than clearing it early.
   if (lockedLinks && lockedNodes){ dim(lockedLinks, lockedNodes); return; }
   linkSel.attr('stroke-opacity', 0.42);
-  nodeG.selectAll('rect').attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
+  nodeG.selectAll('.node-rect').attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
 }
 
 // Walk backward from a node to the root, collecting every link on the way —
@@ -588,8 +638,9 @@ function lockHighlight(d){
   }, 10000);
 }
 
-nodeG.select('rect')
+nodeG.select('.hit-rect')
   .on('mousemove', (evt,d) => moveTip(evt))
+  .on('click', (evt, d) => { lockHighlight(d); if (d.url) window.open(d.url, '_blank', 'noopener'); })
   .on('mouseenter', (evt, d) => {
     const ancestry = ancestorChainLinks(d);              // everything before it
     const nextHop = graph.links.filter(l => l.source === d); // where it leads next
@@ -726,16 +777,20 @@ onWindow('resize', updateActiveSideNav);
 } // end renderChart()
 
 /* ---------------------------------------------------------
-   11. LIVE DATA + PERIOD TOGGLE
+   11. LIVE DATA + PERIOD TOGGLE + EVENTS PANEL
    Paste the /exec URL from your deployed Apps Script web app
    below. Leave it blank to always show the example data above.
    On any failure (not deployed yet, wrong URL, GA4 unreachable,
    property has no traffic that month, etc.) this quietly falls
    back to FALLBACK_TREE so the report never shows broken/empty.
-   The This month / Last month buttons re-run this with a
-   different ?months= value — see the Apps Script's doGet().
+   The period buttons re-run this with either ?months= (a single
+   calendar month) or ?rangeMonths= (a rolling window) — see the
+   Apps Script's doGet() / computePeriod_().
 --------------------------------------------------------- */
 const LIVE_DATA_URL = "https://script.google.com/macros/s/AKfycbxPK1sppCeKdKfi13Y9R6MSBQkfMAXi0Ht9NmRgXvuqxYl7IMTBg4-U38Qh1Ks9srwn/exec";
+
+let latestEvents = [];
+let latestEventsPeriodLabel = '';
 
 function setDataStatus(text, ok){
   const el = document.getElementById('dataStatus');
@@ -745,42 +800,87 @@ function setDataStatus(text, ok){
   el.classList.toggle('is-fallback', ok === false);
 }
 
-function setActivePeriodButton(monthsOffset){
+function setActivePeriodButton(mode, value){
   document.querySelectorAll('.period-btn').forEach(btn => {
-    btn.classList.toggle('active', Number(btn.dataset.months) === monthsOffset);
+    btn.classList.toggle('active', btn.dataset.mode === mode && Number(btn.dataset.value) === value);
   });
 }
 
-async function loadPeriod(monthsOffset){
-  setActivePeriodButton(monthsOffset);
+async function loadPeriod(mode, value){
+  setActivePeriodButton(mode, value);
 
   if (!LIVE_DATA_URL){
     setDataStatus('Showing example data — add your Apps Script URL to go live', false);
+    latestEvents = []; latestEventsPeriodLabel = '';
     renderChart(FALLBACK_TREE);
     return;
   }
   setDataStatus('Loading live data from Google Analytics…', null);
   try {
+    const param = (mode === 'range') ? ('rangeMonths=' + value) : ('months=' + value);
     const sep = LIVE_DATA_URL.indexOf('?') === -1 ? '?' : '&';
-    const res = await fetch(LIVE_DATA_URL + sep + 'months=' + monthsOffset, { cache: 'no-store' });
+    const res = await fetch(LIVE_DATA_URL + sep + param, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!data || data.ok === false || !data.tree) throw new Error((data && data.error) || 'Malformed response');
     const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
+    latestEvents = data.events || [];
+    latestEventsPeriodLabel = data.month || '';
     renderChart(data.tree);
   } catch (err){
     console.warn('Live GA4 feed unavailable, showing example data instead:', err);
     setDataStatus('Live feed unavailable right now — showing example data', false);
+    latestEvents = []; latestEventsPeriodLabel = '';
     renderChart(FALLBACK_TREE);
   }
 }
 
 document.querySelectorAll('.period-btn').forEach(btn => {
-  btn.addEventListener('click', () => loadPeriod(Number(btn.dataset.months)));
+  btn.addEventListener('click', () => loadPeriod(btn.dataset.mode, Number(btn.dataset.value)));
 });
 
-loadPeriod(1); // 1 = last month, on first load — this month has little/no data right at the start of a new month
+loadPeriod('month', 1); // last month, on first load — this month has little/no data right at the start of a new month
+
+/* ---------------------------------------------------------
+   12. EVENTS PANEL
+   Tucked behind one button rather than shown by default — the
+   pathway chart stays the focus, this is there when you want it.
+--------------------------------------------------------- */
+function humanizeEventName(name){
+  return String(name).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function renderEventsModal(){
+  document.getElementById('eventsModalPeriod').textContent = latestEventsPeriodLabel;
+  const body = document.getElementById('eventsModalBody');
+  body.innerHTML = '';
+  if (!latestEvents.length){
+    body.innerHTML = '<div class="events-empty">No event data for this period yet.</div>';
+    return;
+  }
+  latestEvents.forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'events-row';
+    row.innerHTML =
+      '<span class="en">' + humanizeEventName(ev.name) + '</span>' +
+      (ev.keyEvent ? '<span class="events-key">Key event</span>' : '') +
+      '<span class="ec">' + ev.count.toLocaleString() + '</span>';
+    body.appendChild(row);
+  });
+}
+
+function openEventsModal(){ renderEventsModal(); document.getElementById('eventsOverlay').hidden = false; }
+function closeEventsModal(){ document.getElementById('eventsOverlay').hidden = true; }
+
+document.getElementById('eventsBtn').addEventListener('click', openEventsModal);
+document.getElementById('eventsClose').addEventListener('click', closeEventsModal);
+document.getElementById('eventsOverlay').addEventListener('click', (evt) => {
+  if (evt.target.id === 'eventsOverlay') closeEventsModal();
+});
+document.addEventListener('keydown', (evt) => {
+  if (evt.key === 'Escape') closeEventsModal();
+});
 </script>
 </body>
 </html>
