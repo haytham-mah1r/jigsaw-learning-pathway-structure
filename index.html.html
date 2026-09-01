@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jigsaw Learning · Site Navigation Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12"></script>
+<style>
+  :root{
+    --bg:#F6F7F9;
+    --panel:#FFFFFF;
+    --panel-2:#FFFFFF;
+    --line:#E2E5EA;
+    --text:#1B2027;
+    --text-dim:#525A67;
+    --text-dimmer:#7C8494;
+    --amber:#C6862E;
+    --cyan:#137F89;
+    --rust:#BE4A2C;
+    --slate:#848DA0;
+    --root:#2E3644;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font-body);}
+  body{padding-bottom:64px;}
+
+  .wrap{max-width:1680px;margin:0 auto;padding:0 24px;}
+
+  header{border-bottom:1px solid var(--line);padding:14px 0 12px;}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase;margin:0 0 10px;}
+  h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,3.4vw,38px);margin:0 0 10px;letter-spacing:-0.01em;}
+  .sub{font-family:var(--font-body);color:var(--text-dim);font-size:14.5px;line-height:1.6;max-width:720px;margin:0 0 10px;}
+
+  .period-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
+  .data-status{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);margin:0;padding:2px 8px 2px 6px;border:1px solid var(--line);border-radius:20px;width:fit-content;line-height:1.6;}
+  .period-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .period-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 8px;line-height:1.6;background:#fff;border:none;border-right:1px solid var(--line);color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease;}
+  .period-btn:last-child{border-right:none;}
+  .period-btn:hover{background:var(--bg);}
+  .period-btn.active{background:var(--root);color:#fff;}
+  .data-status::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--text-dimmer);flex:none;}
+  .data-status.is-live{color:#1E8A6E;border-color:#BFE3D4;background:#F1FAF6;}
+  .data-status.is-live::before{background:#1E8A6E;}
+  .data-status.is-fallback{color:var(--amber);border-color:#F0DCB8;background:#FBF5EA;}
+  .data-status.is-fallback::before{background:var(--amber);}
+
+  .stats{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content;}
+  .stat{padding:12px 22px;border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .n{font-family:var(--font-mono);font-size:20px;font-weight:500;color:var(--text);}
+  .stat .l{font-size:10.5px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:0;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
+  .swatch{width:7px;height:7px;border-radius:2px;display:inline-block;}
+
+  .panel{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .panel-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;}
+  .panel-head h2{font-family:var(--font-display);font-size:15px;margin:0;font-weight:500;}
+  .panel-head .hint{font-size:11.5px;color:var(--text-dimmer);font-family:var(--font-mono);}
+
+  .panel-body{display:flex;align-items:flex-start;}
+
+  .side-nav{flex:0 0 216px;width:216px;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow-y:auto;padding:16px 14px 20px;border-right:1px solid var(--line);background:var(--panel);z-index:6;}
+  .side-nav h3{margin:0 0 10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dimmer);}
+  .side-nav-item{display:flex;align-items:center;gap:7px;padding:6px 7px;margin:0 -7px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-dim);transition:background .12s ease,color .12s ease;}
+  .side-nav-item:hover, .side-nav-item.active{background:#EEF1F4;color:var(--text);}
+  .side-nav-item .dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px;}
+  .side-nav-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .side-nav-item .c{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);flex:0 0 auto;}
+
+  .col-sticky{position:sticky;top:0;z-index:4;height:30px;background:#FFFFFF;border-bottom:1px solid var(--line);}
+  .col-sticky span{position:absolute;bottom:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dimmer);white-space:nowrap;}
+
+  @media (max-width:760px){
+    .panel-body{flex-direction:column;}
+    .side-nav{position:static;width:100%;flex:none;max-height:240px;border-right:none;border-bottom:1px solid var(--line);}
+  }
+
+  .chart-scroll{overflow-x:auto;overflow-y:visible;cursor:-webkit-grab;cursor:grab;background-color:#FFFFFF;background-image:
+    linear-gradient(to right, rgba(27,32,39,0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(27,32,39,0.035) 1px, transparent 1px);
+    background-size:32px 32px;}
+  .chart-scroll.grabbing, .chart-scroll.grabbing *{cursor:-webkit-grabbing !important;cursor:grabbing !important;}
+  .chart-scroll::-webkit-scrollbar{height:10px;}
+  .chart-scroll::-webkit-scrollbar-track{background:var(--panel);}
+  .chart-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+  body.panning{user-select:none;}
+
+  svg{display:block;}
+  .node-rect{stroke:rgba(27,32,39,0.18);stroke-width:.75;transition:opacity .15s ease;}
+  .link-glyph{fill:var(--cyan);}
+  .link-path{fill:none;transition:opacity .15s ease, stroke-width .15s ease;}
+  .lbl-name{font-family:var(--font-body);fill:var(--text);pointer-events:none;}
+  .lbl-name.dim{fill:var(--text-dim);}
+  .lbl-val{font-family:var(--font-mono);fill:var(--text-dimmer);pointer-events:none;}
+
+  #tooltip{position:fixed;pointer-events:none;z-index:50;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:6px;padding:9px 13px;font-size:12.5px;line-height:1.55;box-shadow:0 12px 30px rgba(27,32,39,0.14);opacity:0;transform:translateY(4px);transition:opacity .12s ease, transform .12s ease;max-width:340px;}
+  #tooltip.show{opacity:1;transform:translateY(0);}
+  #tooltip .t-path{font-family:var(--font-body);font-weight:600;color:var(--text);}
+  #tooltip .t-path-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);margin-top:1px;word-break:break-all;}
+  #tooltip .t-meta{color:var(--text-dim);margin-top:3px;}
+  #tooltip .t-val{color:var(--cyan);font-family:var(--font-mono);}
+
+  footer{max-width:1680px;margin:26px auto 0;padding:0 24px;color:var(--text-dimmer);font-size:12px;line-height:1.7;}
+  footer strong{color:var(--text-dim);}
+  footer p{margin:0 0 8px;}
+  footer details{margin-top:2px;}
+  footer summary{cursor:pointer;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:.02em;list-style:none;}
+  footer summary::-webkit-details-marker{display:none;}
+  footer summary::before{content:"+ ";color:var(--cyan);}
+  footer details[open] summary::before{content:"– ";}
+  footer details p{margin-top:8px;}
+
+  @media (max-width:640px){
+    h1{font-size:22px;}
+    .stat{padding:10px 14px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="period-row">
+      <p class="data-status" id="dataStatus">Loading…</p>
+      <div class="period-toggle" role="group" aria-label="Reporting period">
+        <button class="period-btn" data-months="0" type="button">This month</button>
+        <button class="period-btn" data-months="1" type="button">Last month</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="swatch" style="background:var(--root)"></span>Homepage</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--amber)"></span>Programs, resources &amp; WeCollab</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--cyan)"></span>Company &amp; events</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--rust)"></span>Free trial &amp; store</span>
+      <span class="legend-item"><span class="swatch" style="background:var(--slate)"></span>Other pages</span>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Where visitors go, step by step</h2>
+      <span class="hint">thicker line = more visits · hover a page for details · drag to pan around</span>
+    </div>
+    <div class="panel-body">
+      <nav class="side-nav" id="sideNav" aria-label="Jump to entry page">
+        <h3>Jump to a page</h3>
+        <div class="side-nav-list" id="sideNavList"></div>
+      </nav>
+      <div class="chart-scroll">
+        <div class="col-sticky" id="colSticky"></div>
+        <svg id="chart"></svg>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Each line is visitors moving from one page to the next; a thicker line means more visitors took that path. Page names marked <span class="link-glyph" style="font-family:var(--font-mono)">↗</span> open the real, live page in a new tab.</p>
+    <details>
+      <summary>Notes on how this was put together</summary>
+      <p>Rebuilt from a multi-part analytics export. Flow width uses a square-root scale so smaller paths stay visible next to the biggest ones — the exact visit count is always in the tooltip. To keep each section easy to scan, only the top pages in the three detailed sections (Collaborative Response, WeCollab, Resources) are shown individually; smaller paths are grouped into "Other pages," the same way the analytics tool groups its own long tail. "Other pages" isn't linked, since it's a rollup rather than one single page.</p>
+    </details>
+  </footer>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+/* ---------------------------------------------------------
+   1. DATA
+   This is the fallback shown if a live feed isn't configured
+   (or is unreachable) — see LIVE_DATA_URL and loadPeriod()
+   near the bottom of this script. Everything below builds the
+   same chart from whichever tree it's handed.
+--------------------------------------------------------- */
+const FALLBACK_TREE = {
+  name: "/", value: 950,
+  children: [
+    { name: "/collaborative-response-1", value: 52, children: [
+      { name: "/collaborative-response/overview", value: 14 },
+      { name: "/collaborative-response-1/how-we-support", value: 10 },
+      { name: "/getting-started-collaborative-response", value: 8 },
+      { name: "/collaborative-response-1/partner-successes", value: 6 },
+      { name: "/collaborative-response-1/how-we-support/contracted-services", value: 4 },
+      { name: "/collaborative-response-1/how-we-support/collaborative-response-across-system", value: 3 },
+      { name: "Others", value: 7 },
+    ]},
+    { name: "/wecollab", value: 38, children: [
+      { name: "/wecollab/features", value: 12 },
+      { name: "/wecollab/pricing", value: 8 },
+      { name: "/wecollab/FREE-trial", value: 7 },
+      { name: "/wecollab/features/classrooms", value: 5 },
+      { name: "/wecollab/ongoing-support", value: 3 },
+      { name: "Others", value: 3 },
+    ]},
+    { name: "/resources-and-samples", value: 34, children: [
+      { name: "/resources-and-samples/collaborative-structures", value: 9 },
+      { name: "/resources-and-samples/general-resources", value: 8 },
+      { name: "/resources-and-samples/collaborative-leaders-toolkit", value: 6 },
+      { name: "/resources-and-samples/data-and-evidence", value: 4 },
+      { name: "/resources-and-samples/continuum-supports", value: 3 },
+      { name: "/", value: 2 },
+      { name: "Others", value: 2 },
+    ]},
+    { name: "/publications", value: 28 },
+    { name: "/who-we-are", value: 24 },
+    { name: "/events", value: 21 },
+    { name: "/free", value: 19 },
+    { name: "/store", value: 14 },
+    { name: "/speaking", value: 9 },
+    { name: "/who-we-are/testimonials", value: 7 },
+    { name: "/publications/blog-posts", value: 7 },
+    { name: "/wecollab/pricing", value: 6 },
+    { name: "/events/retreat", value: 5 },
+    { name: "/who-we-are/our-team", value: 5 },
+    { name: "/publications/courses", value: 4 },
+    { name: "/search", value: 3 },
+    { name: "/login", value: 3 },
+    { name: "Others", value: 43 },
+  ]
+};
+
+/* ---------------------------------------------------------
+   Everything below builds and wires up the chart from a tree
+   object shaped like FALLBACK_TREE above. It's wrapped in one
+   function so it can be re-run whenever the period toggle picks
+   a different month — see loadPeriod() at the very end.
+--------------------------------------------------------- */
+let activeCleanup = null; // torn down at the start of every renderChart() call
+
+function renderChart(tree){
+  // A previous call may still have window-level listeners attached
+  // (panning, scroll-tracking for the side-nav) — remove those before
+  // wiring up a new set, or switching periods would double them up.
+  if (typeof activeCleanup === 'function') activeCleanup();
+  const cleanupFns = [];
+  function onWindow(type, fn, opts){
+    window.addEventListener(type, fn, opts);
+    cleanupFns.push(function(){ window.removeEventListener(type, fn, opts); });
+  }
+  activeCleanup = function(){ cleanupFns.forEach(function(fn){ fn(); }); };
+
+  // Clear anything the previous render drew before building the new one.
+  d3.select('#chart').selectAll('*').remove();
+  document.getElementById('sideNavList').innerHTML = '';
+  document.getElementById('colSticky').innerHTML = '';
+
+/* ---------------------------------------------------------
+   1b. LIVE URL RESOLUTION
+   Matched against the site's actual XML sitemaps. Anything
+   not found there (rollups, and one page that no longer
+   appears in the current sitemap) is left unlinked.
+--------------------------------------------------------- */
+const SITE = "https://www.jigsawlearning.ca";
+const UNLINKABLE = new Set(["Others"]);
+function urlFor(path){
+  if (UNLINKABLE.has(path)) return null;
+  return SITE + path;
+}
+
+/* ---------------------------------------------------------
+   1c. PLAIN-ENGLISH LABELS
+   The chart is for a non-technical client, so every node
+   displays a friendly name instead of a raw URL path. The
+   path itself still drives the link and shows on hover.
+--------------------------------------------------------- */
+const LABELS = {
+  "/": "Homepage",
+  "Others": "Other pages",
+  "/collaborative-response-1": "Collaborative Response",
+  "/collaborative-response/overview": "CR Overview",
+  "/getting-started-collaborative-response": "Getting Started with CR",
+  "/collaborative-response-1/how-we-support": "How We Support",
+  "/collaborative-response-1/how-we-support/contracted-services": "Contracted Services",
+  "/collaborative-response-1/how-we-support/collaborative-response-across-system": "CR Across a System",
+  "/collaborative-response-1/partner-successes": "Partner Successes",
+  "/speaking": "Speaking",
+  "/resources-and-samples": "Resources",
+  "/resources-and-samples/general-resources": "General Resources",
+  "/resources-and-samples/collaborative-structures": "Collaborative Structures",
+  "/resources-and-samples/collaborative-structures/collaborative-planning": "Collaborative Planning",
+  "/resources-and-samples/collaborative-structures/collaborative-team-meetings": "Collaborative Team Meetings",
+  "/resources-and-samples/collaborative-structures/school-support-team-meetings": "School Support Team Meetings",
+  "/resources-and-samples/collaborative-structures/case-consult-team-meetings": "Case Consult Team Meetings",
+  "/resources-and-samples/data-and-evidence": "Data and Evidence",
+  "/resources-and-samples/continuum-supports": "Continuum of Supports",
+  "/resources-and-samples/collaborative-leaders-toolkit": "Leader's Toolkit",
+  "/free": "Free Resources",
+  "/publications": "Learning",
+  "/publications/courses": "Online Courses",
+  "/publications/courses/collaborative-response-101-learning-series": "CR 101 Course",
+  "/publications/free-webinars": "Free Webinars",
+  "/publications/workshops": "On-Demand Workshops",
+  "/publications/blog-posts": "Blog",
+  "/publications/membership": "Membership",
+  "/publications/published-works": "Publications",
+  "/publications/podcasts": "Podcasts",
+  "/wecollab": "WeCollab",
+  "/wecollab/features": "WeCollab Features",
+  "/wecollab/features/classrooms": "WeCollab: Classrooms",
+  "/wecollab/features/schools": "WeCollab: Schools",
+  "/wecollab/features/systems": "WeCollab: Systems",
+  "/wecollab/features/student-support-plan": "Student Support Plan",
+  "/wecollab/webinars": "WeCollab Webinars",
+  "/wecollab/pricing": "WeCollab Pricing",
+  "/wecollab/ongoing-support": "WeCollab Support",
+  "/wecollab/FREE-trial": "WeCollab Free Trial",
+  "/events": "Events",
+  "/events/retreat": "Annual Retreat",
+  "/events/collaborative-response-overview-sessions": "CR Overview Sessions",
+  "/events/collaborative-response-virtual-summit": "Virtual Summit",
+  "/who-we-are": "Who We Are",
+  "/who-we-are/organization-history": "Our History",
+  "/who-we-are/mission-vision-values": "Mission & Values",
+  "/who-we-are/our-team": "Our Team",
+  "/who-we-are/news": "News",
+  "/who-we-are/testimonials": "Testimonials",
+  "/store": "Store",
+  "/search": "Search",
+  "/login": "Log In",
+};
+function friendly(path){
+  if (LABELS[path]) return LABELS[path];
+  if (path === '/') return 'Homepage';
+  if (path === 'Others') return 'Other pages';
+  // Not in the curated list (e.g. a page added to the site since) —
+  // turn the last URL segment into a readable title as a fallback.
+  const seg = path.replace(/\/$/, '').split('/').filter(Boolean).pop() || path;
+  return seg.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+/* ---------------------------------------------------------
+   1d. SIMPLIFY THE DEEP BRANCHES
+   The three expanded sections originally listed 14–21
+   individual pages each — accurate, but a lot to take in at
+   a glance. This keeps each branch's top pages visible and
+   folds the long tail into "Other pages," the same rollup
+   idea the data already uses elsewhere. Raise the number to
+   show more detail, or remove the call below to see everything.
+--------------------------------------------------------- */
+const MAX_CHILDREN_SHOWN = 6;
+function simplifyBranches(node){
+  if (!node.children) return;
+  node.children.forEach(simplifyBranches);
+  const real = node.children.filter(c => c.name !== 'Others');
+  const others = node.children.find(c => c.name === 'Others');
+  if (real.length > MAX_CHILDREN_SHOWN){
+    const sorted = [...real].sort((a, b) => b.value - a.value);
+    const kept = sorted.slice(0, MAX_CHILDREN_SHOWN);
+    const folded = sorted.slice(MAX_CHILDREN_SHOWN).reduce((s, c) => s + c.value, 0) + (others ? others.value : 0);
+    node.children = [...kept, { name: 'Others', value: folded }];
+  }
+}
+tree.children.forEach(simplifyBranches);
+
+/* ---------------------------------------------------------
+   2. CATEGORY COLORS (semantic, not decorative)
+--------------------------------------------------------- */
+const COLORS = { home:'#B8C0CC', product:'#E3A857', company:'#4EC0C9', conversion:'#D9694F', other:'#6E7580' };
+const PRODUCT = ['/collaborative-response', '/getting-started-collaborative-response', '/wecollab', '/resources-and-samples', '/publications'];
+const COMPANY = ['/who-we-are', '/events', '/speaking'];
+const CONVERSION = ['/free', '/store'];
+
+function categorize(path){
+  if (path === '/') return 'home';
+  if (path === 'Others') return 'other';
+  if (PRODUCT.some(p => path.startsWith(p))) return 'product';
+  if (COMPANY.some(p => path.startsWith(p))) return 'company';
+  if (CONVERSION.some(p => path.startsWith(p))) return 'conversion';
+  return 'other';
+}
+
+/* ---------------------------------------------------------
+   3. FLATTEN TREE -> nodes / links (sqrt-scaled link value
+   for legible widths; true counts kept as `.count`)
+--------------------------------------------------------- */
+const nodes = [];
+const links = [];
+let idc = 0;
+
+function addNode(t, parent){
+  const cat = categorize(t.name);
+  const node = { id: idc++, name: t.name, label: friendly(t.name), count: t.value, cat, color: COLORS[cat], url: t.name === '/' ? SITE + '/' : urlFor(t.name) };
+  nodes.push(node);
+  if (parent){
+    links.push({ source: parent.id, target: node.id, value: Math.sqrt(t.value), count: t.value });
+  }
+  (t.children || []).forEach(c => addNode(c, node));
+  return node;
+}
+addNode(tree, null);
+
+/* ---------------------------------------------------------
+   4. LAYOUT
+--------------------------------------------------------- */
+const MARGIN = { top: 30, right: 220, bottom: 30, left: 20 };
+const WIDTH = 1000;
+
+// count nodes per depth (needs a first pass) to size height
+const depthCounts = {};
+function passDepth(t, depth){
+  depthCounts[depth] = (depthCounts[depth]||0) + 1;
+  (t.children||[]).forEach(c => passDepth(c, depth+1));
+}
+passDepth(tree, 0);
+const maxCol = Math.max(...Object.values(depthCounts));
+const HEIGHT = Math.max(500, maxCol * 35 + 80);
+
+const svg = d3.select('#chart')
+  .attr('width', WIDTH)
+  .attr('height', HEIGHT)
+  .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`);
+
+const sankeyGen = d3.sankey()
+  .nodeId(d => d.id)
+  .nodeAlign(d3.sankeyLeft)
+  .nodeWidth(12)
+  .nodePadding(6)
+  .extent([[MARGIN.left, MARGIN.top], [WIDTH - MARGIN.right, HEIGHT - MARGIN.bottom]]);
+
+const graph = sankeyGen({
+  nodes: nodes.map(d => Object.assign({}, d)),
+  links: links.map(d => Object.assign({}, d)),
+});
+
+// safety clamp so nothing renders sub-pixel
+graph.nodes.forEach(n => { if (n.y1 - n.y0 < 2) { const m=(n.y0+n.y1)/2; n.y0=m-1; n.y1=m+1; } });
+graph.links.forEach(l => { if (l.width < 1.2) l.width = 1.2; });
+
+/* ---------------------------------------------------------
+   5. COLUMN HEADERS — rendered into the sticky bar above the
+   chart (see #colSticky) rather than inside the SVG, so they
+   stay visible no matter how far down the page you've scrolled.
+--------------------------------------------------------- */
+const byDepth = d3.group(graph.nodes, d => d.depth);
+const headerLabels = ['Entry page', 'Next page', 'Then'];
+const colSticky = document.getElementById('colSticky');
+colSticky.style.width = WIDTH + 'px';
+byDepth.forEach((list, depth) => {
+  const x = d3.min(list, d => d.x0);
+  const span = document.createElement('span');
+  span.style.left = x + 'px';
+  span.textContent = headerLabels[depth] || '';
+  colSticky.appendChild(span);
+});
+
+/* ---------------------------------------------------------
+   6. LINKS
+--------------------------------------------------------- */
+const linkGen = d3.sankeyLinkHorizontal();
+
+const linkSel = svg.append('g').attr('fill','none')
+  .selectAll('path')
+  .data(graph.links)
+  .join('path')
+  .attr('class','link-path')
+  .attr('d', linkGen)
+  .attr('stroke', d => d.target.color)
+  .attr('stroke-width', d => d.width)
+  .attr('stroke-opacity', 0.42);
+
+/* ---------------------------------------------------------
+   7. NODES
+--------------------------------------------------------- */
+const nodeG = svg.append('g').selectAll('g')
+  .data(graph.nodes)
+  .join('g')
+  .style('cursor', d => d.url ? 'pointer' : 'grab')
+  .on('click', (evt, d) => { lockHighlight(d); if (d.url) window.open(d.url, '_blank', 'noopener'); });
+
+nodeG.append('rect')
+  .attr('class','node-rect')
+  .attr('x', d => d.x0)
+  .attr('y', d => d.y0)
+  .attr('width', d => d.x1 - d.x0)
+  .attr('height', d => d.y1 - d.y0)
+  .attr('rx', 2)
+  .attr('fill', d => d.color)
+  .attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
+
+nodeG.append('text')
+  .attr('class', d => 'lbl-name' + (d.depth >= 2 ? ' dim' : ''))
+  .attr('x', d => d.x1 + 7)
+  .attr('y', d => (d.y0 + d.y1) / 2 - (d.depth <= 1 ? 3 : 1) )
+  .attr('font-size', d => d.depth === 0 ? 14 : d.depth === 1 ? 12.5 : 11.5)
+  .attr('font-weight', d => d.depth === 0 ? 600 : 500)
+  .attr('dominant-baseline', 'middle')
+  .text(d => d.depth === 0 ? 'All sessions' : d.label)
+  .filter(d => !!d.url)
+  .append('tspan')
+    .attr('class','link-glyph')
+    .attr('dx', 4)
+    .attr('font-size', '0.8em')
+    .text('↗');
+
+nodeG.append('text')
+  .attr('class','lbl-val')
+  .attr('x', d => d.x1 + 7)
+  .attr('y', d => (d.y0 + d.y1) / 2 + (d.depth <= 1 ? 11 : 9))
+  .attr('font-size', d => d.depth <= 1 ? 10.5 : 9)
+  .attr('dominant-baseline', 'middle')
+  .text(d => d.count.toLocaleString() + (d.depth === 0 ? ' sessions' : ''));
+
+/* ---------------------------------------------------------
+   8. INTERACTION
+--------------------------------------------------------- */
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){
+  tooltip.innerHTML = html;
+  tooltip.classList.add('show');
+  moveTip(evt);
+}
+function moveTip(evt){
+  const pad = 16;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + 320 > window.innerWidth) x = evt.clientX - 320 - pad;
+  if (y + 90 > window.innerHeight) y = evt.clientY - 90 - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTip(){ tooltip.classList.remove('show'); }
+
+function dim(exceptLinks, exceptNodes){
+  linkSel.attr('stroke-opacity', d => exceptLinks.has(d) ? 0.85 : 0.06);
+  nodeG.selectAll('rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
+}
+function resetDim(){
+  // If a page is "locked" (clicked from the side list), falling back
+  // here — e.g. after a mouse hover elsewhere ends — should restore
+  // that lock rather than clearing it early.
+  if (lockedLinks && lockedNodes){ dim(lockedLinks, lockedNodes); return; }
+  linkSel.attr('stroke-opacity', 0.42);
+  nodeG.selectAll('rect').attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
+}
+
+// Walk backward from a node to the root, collecting every link on the way —
+// so hovering something two or three pages deep highlights the whole path
+// that led there, not just the last hop.
+function incomingLink(node){ return graph.links.find(l => l.target === node); }
+function ancestorChainLinks(node){
+  const chain = [];
+  let inc = incomingLink(node);
+  while (inc){ chain.push(inc); inc = incomingLink(inc.source); }
+  return chain;
+}
+function collectNodes(linkSet){
+  const ns = new Set();
+  linkSet.forEach(l => { ns.add(l.source); ns.add(l.target); });
+  return ns;
+}
+
+/* ---------------------------------------------------------
+   9b. HIGHLIGHT LOCK — clicking a page (from the side list or
+   the chart itself) isolates its path — itself, everything
+   before it, and its immediate next step — for 10 seconds,
+   then the diagram fades back to showing everything. Picking
+   another page while the countdown is running swaps to that
+   page's path instead and restarts the 10 seconds.
+--------------------------------------------------------- */
+let lockedLinks = null, lockedNodes = null, lockTimer = null;
+
+function pathHighlightFor(d){
+  const ancestry = ancestorChainLinks(d);
+  const nextHop = graph.links.filter(l => l.source === d);
+  const highlightLinks = new Set([...ancestry, ...nextHop]);
+  const highlightNodes = collectNodes(highlightLinks);
+  highlightNodes.add(d);
+  return { highlightLinks, highlightNodes };
+}
+
+function lockHighlight(d){
+  if (lockTimer) clearTimeout(lockTimer);
+  const { highlightLinks, highlightNodes } = pathHighlightFor(d);
+  lockedLinks = highlightLinks;
+  lockedNodes = highlightNodes;
+  dim(lockedLinks, lockedNodes);
+  lockTimer = setTimeout(() => {
+    lockedLinks = null; lockedNodes = null; lockTimer = null;
+    resetDim();
+  }, 10000);
+}
+
+nodeG.select('rect')
+  .on('mousemove', (evt,d) => moveTip(evt))
+  .on('mouseenter', (evt, d) => {
+    const ancestry = ancestorChainLinks(d);              // everything before it
+    const nextHop = graph.links.filter(l => l.source === d); // where it leads next
+    const highlightLinks = new Set([...ancestry, ...nextHop]);
+    const highlightNodes = collectNodes(highlightLinks);
+    highlightNodes.add(d);
+    dim(highlightLinks, highlightNodes);
+    const parentLink = ancestry[0];
+    const pct = parentLink ? ((d.count / parentLink.source.count) * 100).toFixed(1) + '% of ' + (parentLink.source.depth===0?'all sessions':parentLink.source.label) : null;
+    const linkLine = d.url
+      ? `<div class="t-meta" style="color:var(--cyan);margin-top:4px;">↗ click to open page</div>`
+      : d.name === 'Others'
+        ? `<div class="t-meta" style="margin-top:4px;">a group of smaller pages, not one single page</div>`
+        : `<div class="t-meta" style="margin-top:4px;">no longer a live page on the site</div>`;
+    const path = d.depth === 0 ? '' : `<div class="t-path-sub">${d.name}</div>`;
+    showTip(`<div class="t-path">${d.depth===0?'Homepage':d.label}</div>${path}<div class="t-meta"><span class="t-val">${d.count.toLocaleString()}</span> visits${pct?' · '+pct:''}</div>${linkLine}`, evt);
+  })
+  .on('mouseleave', () => { resetDim(); hideTip(); });
+
+linkSel
+  .on('mousemove', (evt,d) => moveTip(evt))
+  .on('mouseenter', (evt, d) => {
+    const ancestry = ancestorChainLinks(d.source);       // everything upstream of this ribbon
+    const highlightLinks = new Set([d, ...ancestry]);
+    const highlightNodes = collectNodes(highlightLinks);
+    dim(highlightLinks, highlightNodes);
+    const from = d.source.depth === 0 ? 'Homepage' : d.source.label;
+    showTip(`<div class="t-path">${from} → ${d.target.label}</div><div class="t-meta"><span class="t-val">${d.count.toLocaleString()}</span> visits</div>`, evt);
+  })
+  .on('mouseleave', () => { resetDim(); hideTip(); });
+
+/* ---------------------------------------------------------
+   9. LEFT SIDE-NAV — lists every entry page, stays pinned to
+   the top of the viewport (position: sticky) as you scroll
+   down through the tall diagram, so it's always reachable.
+--------------------------------------------------------- */
+function absolutePageY(node){
+  const svgTop = document.getElementById('chart').getBoundingClientRect().top + window.scrollY;
+  return svgTop + (node.y0 + node.y1) / 2;
+}
+
+const sideNavList = document.getElementById('sideNavList');
+const level1Nodes = graph.nodes.filter(n => n.depth === 1);
+
+level1Nodes.forEach(n => {
+  const item = document.createElement('div');
+  item.className = 'side-nav-item';
+  item.dataset.id = n.id;
+  item.innerHTML = `<span class="dot" style="background:${n.color}"></span><span class="nm">${n.name === '/' ? 'All sessions' : n.label}</span><span class="c">${n.count.toLocaleString()}</span>`;
+  item.addEventListener('click', () => {
+    lockHighlight(n);
+    window.scrollTo({ top: absolutePageY(n) - Math.min(160, window.innerHeight * 0.3), behavior: 'smooth' });
+  });
+  sideNavList.appendChild(item);
+});
+
+const sideNavItems = sideNavList.querySelectorAll('.side-nav-item');
+function updateActiveSideNav(){
+  const probeY = window.scrollY + window.innerHeight * 0.35;
+  let closest = null, closestDist = Infinity;
+  level1Nodes.forEach(n => {
+    const dist = Math.abs(absolutePageY(n) - probeY);
+    if (dist < closestDist){ closestDist = dist; closest = n; }
+  });
+  sideNavItems.forEach(el => el.classList.toggle('active', closest && Number(el.dataset.id) === closest.id));
+}
+updateActiveSideNav();
+onWindow('scroll', updateActiveSideNav, { passive: true });
+onWindow('resize', updateActiveSideNav);
+
+/* ---------------------------------------------------------
+   10. CLICK-AND-DRAG PANNING
+   A Figma-style hand tool: click, hold, and drag anywhere on
+   the chart to pan it in any direction (pans the horizontal
+   scroller and the page's vertical scroll together). Mouse
+   only — touch devices keep their native scroll gestures.
+   A small movement threshold means an ordinary click (e.g. to
+   open a linked page) still works normally.
+--------------------------------------------------------- */
+(function enablePanning(){
+  const scrollEl = document.querySelector('.chart-scroll');
+  const THRESHOLD = 6;
+  let isDown = false, dragged = false, suppressClick = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  let pendingDx = 0, pendingDy = 0, rafId = null;
+
+  function applyPan(){
+    scrollEl.scrollLeft = startLeft - pendingDx;
+    window.scrollTo(window.scrollX, startTop - pendingDy);
+    rafId = null;
+  }
+
+  scrollEl.addEventListener('pointerdown', (evt) => {
+    if (evt.pointerType === 'touch' || evt.button !== 0) return;
+    isDown = true;
+    dragged = false;
+    startX = evt.clientX;
+    startY = evt.clientY;
+    startLeft = scrollEl.scrollLeft;
+    startTop = window.scrollY;
+    scrollEl.classList.add('grabbing');
+    document.body.classList.add('panning');
+  });
+
+  onWindow('pointermove', (evt) => {
+    if (!isDown) return;
+    const dx = evt.clientX - startX;
+    const dy = evt.clientY - startY;
+    if (!dragged && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) dragged = true;
+    if (dragged){
+      pendingDx = dx; pendingDy = dy;
+      if (rafId === null) rafId = requestAnimationFrame(applyPan);
+    }
+  });
+
+  function endDrag(){
+    if (!isDown) return;
+    isDown = false;
+    scrollEl.classList.remove('grabbing');
+    document.body.classList.remove('panning');
+    if (dragged) suppressClick = true;
+  }
+  onWindow('pointerup', endDrag);
+  onWindow('pointercancel', endDrag);
+
+  // A drag that ends over a linked node still fires a native
+  // click — swallow it here so panning never accidentally
+  // opens a page.
+  scrollEl.addEventListener('click', (evt) => {
+    if (suppressClick){ evt.stopPropagation(); evt.preventDefault(); suppressClick = false; }
+  }, true);
+})();
+
+} // end renderChart()
+
+/* ---------------------------------------------------------
+   11. LIVE DATA + PERIOD TOGGLE
+   Paste the /exec URL from your deployed Apps Script web app
+   below. Leave it blank to always show the example data above.
+   On any failure (not deployed yet, wrong URL, GA4 unreachable,
+   property has no traffic that month, etc.) this quietly falls
+   back to FALLBACK_TREE so the report never shows broken/empty.
+   The This month / Last month buttons re-run this with a
+   different ?months= value — see the Apps Script's doGet().
+--------------------------------------------------------- */
+const LIVE_DATA_URL = "https://script.google.com/macros/s/AKfycbz7YrcYCOWI-v6hSVoFFnIMdBl8Y3SR8f7hmdsQB82iCVhFE-gV2cAYUf3yxJFofe1K/exec";
+
+function setDataStatus(text, ok){
+  const el = document.getElementById('dataStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.toggle('is-live', ok === true);
+  el.classList.toggle('is-fallback', ok === false);
+}
+
+function setActivePeriodButton(monthsOffset){
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.classList.toggle('active', Number(btn.dataset.months) === monthsOffset);
+  });
+}
+
+async function loadPeriod(monthsOffset){
+  setActivePeriodButton(monthsOffset);
+
+  if (!LIVE_DATA_URL){
+    setDataStatus('Showing example data — add your Apps Script URL to go live', false);
+    renderChart(FALLBACK_TREE);
+    return;
+  }
+  setDataStatus('Loading live data from Google Analytics…', null);
+  try {
+    const sep = LIVE_DATA_URL.indexOf('?') === -1 ? '?' : '&';
+    const res = await fetch(LIVE_DATA_URL + sep + 'months=' + monthsOffset, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data || data.ok === false || !data.tree) throw new Error((data && data.error) || 'Malformed response');
+    const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
+    renderChart(data.tree);
+  } catch (err){
+    console.warn('Live GA4 feed unavailable, showing example data instead:', err);
+    setDataStatus('Live feed unavailable right now — showing example data', false);
+    renderChart(FALLBACK_TREE);
+  }
+}
+
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.addEventListener('click', () => loadPeriod(Number(btn.dataset.months)));
+});
+
+loadPeriod(1); // 1 = last month, on first load — this month has little/no data right at the start of a new month
+</script>
+</body>
+</html>
