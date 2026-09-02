@@ -63,7 +63,9 @@
   .events-row:hover{background:var(--bg);}
   .events-row .en{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .events-row .ec{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
-  .events-key{font-size:9px;font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase;color:#B8860B;background:#FBF1DA;border:1px solid #F0DCB8;border-radius:10px;padding:1px 7px;flex:none;}
+  .events-section{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dimmer);padding:14px 8px 6px;}
+  .events-section:first-child{padding-top:6px;}
+  .events-section.is-key{color:#B8860B;}
   .events-empty{padding:24px 12px;text-align:center;color:var(--text-dimmer);font-size:13px;}
   .data-status.is-live{color:#1E8A6E;border-color:#BFE3D4;background:#F1FAF6;}
   .data-status.is-live::before{background:#1E8A6E;}
@@ -791,6 +793,7 @@ const LIVE_DATA_URL = "https://script.google.com/macros/s/AKfycbxPK1sppCeKdKfi13
 
 let latestEvents = [];
 let latestEventsPeriodLabel = '';
+let latestEventsError = null;
 
 function setDataStatus(text, ok){
   const el = document.getElementById('dataStatus');
@@ -811,7 +814,7 @@ async function loadPeriod(mode, value){
 
   if (!LIVE_DATA_URL){
     setDataStatus('Showing example data — add your Apps Script URL to go live', false);
-    latestEvents = []; latestEventsPeriodLabel = '';
+    latestEvents = []; latestEventsPeriodLabel = ''; latestEventsError = null;
     renderChart(FALLBACK_TREE);
     return;
   }
@@ -827,11 +830,12 @@ async function loadPeriod(mode, value){
     setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
     latestEvents = data.events || [];
     latestEventsPeriodLabel = data.month || '';
+    latestEventsError = data.eventsError || null;
     renderChart(data.tree);
   } catch (err){
     console.warn('Live GA4 feed unavailable, showing example data instead:', err);
     setDataStatus('Live feed unavailable right now — showing example data', false);
-    latestEvents = []; latestEventsPeriodLabel = '';
+    latestEvents = []; latestEventsPeriodLabel = ''; latestEventsError = null;
     renderChart(FALLBACK_TREE);
   }
 }
@@ -855,19 +859,40 @@ function renderEventsModal(){
   document.getElementById('eventsModalPeriod').textContent = latestEventsPeriodLabel;
   const body = document.getElementById('eventsModalBody');
   body.innerHTML = '';
+
+  if (latestEventsError){
+    body.innerHTML = '<div class="events-empty">Couldn\'t load events: ' + latestEventsError + '</div>';
+    return;
+  }
   if (!latestEvents.length){
     body.innerHTML = '<div class="events-empty">No event data for this period yet.</div>';
     return;
   }
-  latestEvents.forEach(ev => {
+
+  const keyEvents = latestEvents.filter(ev => ev.keyEvent);
+  const otherEvents = latestEvents.filter(ev => !ev.keyEvent);
+
+  function addRow(ev){
     const row = document.createElement('div');
     row.className = 'events-row';
     row.innerHTML =
       '<span class="en">' + humanizeEventName(ev.name) + '</span>' +
-      (ev.keyEvent ? '<span class="events-key">Key event</span>' : '') +
       '<span class="ec">' + ev.count.toLocaleString() + '</span>';
     body.appendChild(row);
-  });
+  }
+  function addSectionLabel(text, isKey){
+    const label = document.createElement('div');
+    label.className = 'events-section' + (isKey ? ' is-key' : '');
+    label.textContent = text;
+    body.appendChild(label);
+  }
+
+  if (keyEvents.length){
+    addSectionLabel('Key Events', true);
+    keyEvents.forEach(addRow);
+    addSectionLabel('All Events', false);
+  }
+  otherEvents.forEach(addRow);
 }
 
 function openEventsModal(){ renderEventsModal(); document.getElementById('eventsOverlay').hidden = false; }
