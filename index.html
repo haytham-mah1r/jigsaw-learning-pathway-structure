@@ -19,7 +19,6 @@
     --amber:#C6862E;
     --cyan:#137F89;
     --rust:#BE4A2C;
-    --slate:#848DA0;
     --root:#2E3644;
     --event:#7C5CBF;
     --key-event:#B8860B;
@@ -55,19 +54,22 @@
   .stat .n{font-family:var(--font-mono);font-size:19px;font-weight:500;color:var(--text);}
   .stat .l{font-size:10.5px;color:var(--text-dimmer);margin-top:2px;}
 
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
+  .swatch{width:7px;height:7px;border-radius:2px;display:inline-block;}
+
   .panel{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
   .panel-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;}
   .panel-head h2{font-family:var(--font-display);font-size:15px;margin:0;font-weight:500;}
   .panel-head .hint{font-size:11.5px;color:var(--text-dimmer);}
 
-  /* ---------- Pathway: picker + card grid ---------- */
+  /* ---------- picker + single chart ---------- */
   .split{display:flex;align-items:flex-start;}
-  .picker{flex:0 0 236px;width:236px;border-right:1px solid var(--line);padding:14px;position:sticky;top:0;max-height:100vh;overflow-y:auto;background:var(--panel);}
+  .picker{flex:0 0 244px;width:244px;border-right:1px solid var(--line);padding:14px;position:sticky;top:0;max-height:100vh;overflow-y:auto;background:var(--panel);z-index:3;}
   .picker h3{margin:0 0 3px;font-family:var(--font-display);font-size:12.5px;font-weight:500;}
   .picker .note{margin:0 0 10px;font-size:11px;color:var(--text-dimmer);line-height:1.45;}
   .picker-search{width:100%;font-family:var(--font-body);font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;color:var(--text);background:#fff;}
-  .picker-search::placeholder{color:var(--text-dimmer);}
-  .picker-actions{display:flex;gap:6px;margin:8px 0 6px;}
+  .picker-actions{display:flex;gap:6px;margin:8px 0 6px;flex-wrap:wrap;}
   .mini-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);cursor:pointer;}
   .mini-btn:hover{background:var(--bg);}
   .pick{display:flex;align-items:center;gap:8px;padding:5px 6px;margin:0 -6px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-dim);}
@@ -77,58 +79,33 @@
   .pick .dot{width:6px;height:6px;border-radius:50%;flex:none;}
   .pick .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .pick .c{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);flex:none;}
-  .picker-empty{font-size:11.5px;color:var(--text-dimmer);padding:8px 0;}
+  .picker-note{font-size:11px;color:var(--text-dimmer);padding:8px 0 0;line-height:1.45;}
 
-  .boards{flex:1;min-width:0;padding:14px;}
-  .board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;}
-  .board{border:1px solid var(--line);border-radius:8px;background:#fff;display:flex;flex-direction:column;min-width:0;}
-  .board-head{display:flex;align-items:center;gap:7px;padding:9px 10px 8px;border-bottom:1px solid var(--line-soft);}
-  .board-head .dot{width:8px;height:8px;border-radius:2px;flex:none;}
-  .board-title{flex:1;min-width:0;}
-  .board-title .nm{font-size:13px;font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .board-title .sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);}
-  .icon-btn{border:none;background:none;color:var(--text-dimmer);cursor:pointer;font-size:13px;line-height:1;padding:3px 4px;border-radius:4px;flex:none;}
-  .icon-btn:hover{background:var(--bg);color:var(--text);}
-  .icon-btn.ext{color:var(--cyan);}
-  .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:3px;padding:7px 10px 0;font-size:10.5px;color:var(--text-dimmer);font-family:var(--font-mono);}
-  .crumbs button{border:none;background:none;padding:0;font:inherit;color:var(--cyan);cursor:pointer;}
-  .crumbs button:hover{text-decoration:underline;}
-  .crumbs .sep{opacity:.55;}
-  .crumbs .here{color:var(--text-dim);}
-  .board-body{padding:4px 10px 8px;}
-  .board-foot{padding:0 10px 9px;font-size:10.5px;color:var(--text-dimmer);display:flex;justify-content:space-between;gap:8px;align-items:center;}
-  .board-foot .toggle{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);padding:2px 7px;cursor:pointer;}
-  .board-foot .toggle:hover{background:var(--bg);}
-  .leaf-note{padding:14px 10px 16px;font-size:12px;color:var(--text-dimmer);}
+  .chart-col{flex:1;min-width:0;}
+  .col-heads{position:relative;height:26px;border-bottom:1px solid var(--line-soft);}
+  .col-heads span{position:absolute;bottom:6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--text-dimmer);white-space:nowrap;}
+  .chart-scroll{overflow-x:auto;padding:0 14px 14px;}
+  .chart-scroll::-webkit-scrollbar{height:9px;}
+  .chart-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+  svg#chart{display:block;}
+  #chart .ribbon{transition:fill-opacity .12s ease;}
+  #chart .node-hit{fill:transparent;}
+  #chart .n-nm{font-family:var(--font-body);font-size:11.5px;fill:var(--text);}
+  #chart .n-nm.root{font-size:13px;font-weight:600;}
+  #chart .n-val{font-family:var(--font-mono);font-size:10px;fill:var(--text-dimmer);}
+  #chart .n-chev{font-family:var(--font-mono);font-size:9px;fill:var(--text-dimmer);}
+  #chart .n-ext{font-family:var(--font-mono);font-size:10px;fill:var(--cyan);cursor:pointer;}
+  #chart .n-nm, #chart .n-val, #chart .n-chev{pointer-events:none;}
+  #chart g.node.can-open{cursor:pointer;}
+  #chart g.node.can-open:hover .n-nm{fill:var(--cyan);}
+  #chart g.node.faded{opacity:.28;}
 
-  /* indented full-path list inside a card */
-  .tree{margin:2px 0 4px;}
-  .tree-row{display:flex;align-items:center;gap:7px;padding:3px 2px;font-size:11.5px;border-radius:4px;}
-  .tree-row:hover{background:#F4F6F8;}
-  .tree-row .bar{height:4px;border-radius:2px;flex:none;min-width:2px;}
-  .tree-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-dim);}
-  .tree-row .nm a{color:inherit;text-decoration:none;}
-  .tree-row .nm a:hover{color:var(--cyan);text-decoration:underline;}
-  .tree-row .c{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);flex:none;}
+  .chart-empty{padding:44px 20px;text-align:center;color:var(--text-dim);font-size:13px;}
+  .chart-empty p{margin:0 0 12px;}
+  .chart-empty button{font-family:var(--font-body);font-size:12px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;color:var(--text);}
+  .chart-empty button:hover{background:var(--bg);}
 
-  .empty-boards{border:1px dashed var(--line);border-radius:8px;padding:34px 20px;text-align:center;color:var(--text-dim);font-size:13px;}
-  .empty-boards p{margin:0 0 12px;}
-  .empty-boards button{font-family:var(--font-body);font-size:12px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;color:var(--text);}
-  .empty-boards button:hover{background:var(--bg);}
-
-  /* ---------- flow SVG ---------- */
-  .flow{display:block;width:100%;}
-  .flow .ribbon{transition:fill-opacity .12s ease;}
-  .flow .row-hit{fill:transparent;}
-  .flow .r-nm{font-family:var(--font-body);font-size:11.5px;fill:var(--text);}
-  .flow .r-val{font-family:var(--font-mono);font-size:10px;fill:var(--text-dimmer);}
-  .flow .r-chev{font-family:var(--font-body);font-size:11px;fill:var(--text-dimmer);}
-  .flow .r-ext{font-family:var(--font-mono);font-size:10px;fill:var(--cyan);cursor:pointer;}
-  .flow g.row{cursor:default;}
-  .flow g.row.drillable{cursor:pointer;}
-  .flow g.row:hover .r-nm{fill:var(--cyan);}
-
-  /* ---------- Events table ---------- */
+  /* ---------- events table ---------- */
   .ev-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line-soft);}
   .ev-tools input[type=search]{font-family:var(--font-body);font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;min-width:190px;}
   .chips{display:flex;flex-wrap:wrap;gap:5px;padding:10px 18px 12px;border-bottom:1px solid var(--line-soft);}
@@ -176,10 +153,6 @@
   #tooltip .t-meta{color:var(--text-dim);margin-top:3px;}
   #tooltip .t-val{color:var(--cyan);font-family:var(--font-mono);}
 
-  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
-  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
-  .swatch{width:7px;height:7px;border-radius:2px;display:inline-block;}
-
   footer{max-width:1680px;margin:22px auto 0;padding:0 24px;color:var(--text-dimmer);font-size:12px;line-height:1.7;}
   footer p{margin:0 0 8px;}
   footer summary{cursor:pointer;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;list-style:none;}
@@ -191,8 +164,8 @@
 
   @media (max-width:900px){
     .split{flex-direction:column;}
-    .picker{position:static;width:100%;flex:none;max-height:230px;border-right:none;border-bottom:1px solid var(--line);}
-    .board-grid{grid-template-columns:1fr;}
+    .picker{position:static;width:100%;flex:none;max-height:240px;border-right:none;border-bottom:1px solid var(--line);}
+    .chart-col{width:100%;}
     .barcell{display:none;}
   }
   @media (prefers-reduced-motion:reduce){
@@ -225,30 +198,34 @@
     </div>
   </header>
 
-  <!-- ============ PATHWAY VIEW ============ -->
+  <!-- ============ PATHWAY ============ -->
   <div class="panel" id="pathwayPanel">
     <div class="panel-head">
-      <h2>Where sessions go from the homepage</h2>
-      <span class="hint" id="pathwayHint">tick a page to open its own chart · click a next step to go deeper</span>
+      <h2>Every session, and where it went</h2>
+      <span class="hint">tick a starting page to add its branch · click any page to open the next step</span>
     </div>
     <div class="split">
-      <nav class="picker" id="picker" aria-label="Choose pages to chart">
-        <h3>Pages to chart</h3>
-        <p class="note">Each page you tick gets its own small chart on the right.</p>
+      <nav class="picker" id="picker" aria-label="Choose starting pages">
+        <h3>Pages sessions start on</h3>
+        <p class="note">Tick one to add its branch to the diagram. Everything stays on the same chart.</p>
         <input class="picker-search" id="pickerSearch" type="search" placeholder="Find a page…" aria-label="Find a page">
         <div class="picker-actions">
           <button class="mini-btn" id="pickTop" type="button">Top 5</button>
+          <button class="mini-btn" id="pickAll" type="button">All</button>
           <button class="mini-btn" id="pickClear" type="button">Clear</button>
         </div>
         <div id="pickerList"></div>
       </nav>
-      <div class="boards">
-        <div id="boardGrid" class="board-grid"></div>
+      <div class="chart-col">
+        <div class="col-heads" id="colHeads"></div>
+        <div class="chart-scroll" id="chartScroll">
+          <svg id="chart"></svg>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ============ EVENTS VIEW ============ -->
+  <!-- ============ EVENTS ============ -->
   <div class="panel" id="eventsPanel" style="display:none;">
     <div class="panel-head">
       <h2>What happened, and where in the journey</h2>
@@ -266,122 +243,127 @@
   </div>
 
   <footer>
-    <p id="footerMain">Counts are sessions — one visit by one person, however many pages they open in it. A page marked ↗ opens the live page in a new tab.</p>
+    <p id="footerMain">Counts are sessions — one visit by one person, however many pages they open in it. The figure at the trunk is every session on the site in the period, and the branches beneath it are the pages those sessions started on. A page marked ↗ opens the live page in a new tab.</p>
     <details>
       <summary>Notes on how this was put together</summary>
-      <p>Journeys are traced from the homepage outward: for each page, the report asks Google Analytics which pages sessions opened next. Every branch traces as far as its own traffic supports. Smaller paths are grouped into "Other pages" so no single chart becomes a wall of tiny entries — the same rollup Google Analytics uses for its own long tail. "Other pages" is a group rather than one page, so it isn't linked or clickable.</p>
+      <p>Sessions are grouped first by the page they started on, which is why the total matches Google Analytics' own session count rather than only counting homepage arrivals. From each of those pages the report asks Google Analytics which pages sessions opened next, and traces onward branch by branch as far as each branch's own traffic supports. Smaller paths are grouped into "Other pages" so no branch becomes a wall of tiny entries — the same rollup Google Analytics uses for its own long tail. "Other pages" is a group rather than one page, so it isn't linked or expandable.</p>
     </details>
   </footer>
 </div>
 
 <div id="tooltip"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
 /* =========================================================
    1. FALLBACK DATA — shown when the live feed isn't reachable.
-   Same shape the Apps Script returns.
+   Same shape the Apps Script returns: the trunk is every session,
+   its children are the pages those sessions started on.
 ========================================================= */
+const ROOT_NAME = '__all__';
+
 const FALLBACK_TREE = {
-  name: "/", value: 950,
+  name: ROOT_NAME, value: 3800,
   children: [
-    { name: "/collaborative-response-1", value: 52, children: [
-      { name: "/collaborative-response/overview", value: 14, children: [
-        { name: "/getting-started-collaborative-response", value: 5 },
-        { name: "/collaborative-response-1/partner-successes", value: 3 },
-        { name: "Others", value: 6 },
+    { name: "/", value: 950, children: [
+      { name: "/collaborative-response-1", value: 52, children: [
+        { name: "/collaborative-response/overview", value: 14, children: [
+          { name: "/getting-started-collaborative-response", value: 5 },
+          { name: "Others", value: 6 },
+        ]},
+        { name: "/collaborative-response-1/how-we-support", value: 10 },
+        { name: "/getting-started-collaborative-response", value: 8 },
+        { name: "/collaborative-response-1/partner-successes", value: 6 },
+        { name: "Others", value: 14 },
       ]},
-      { name: "/collaborative-response-1/how-we-support", value: 10, children: [
-        { name: "/collaborative-response-1/how-we-support/contracted-services", value: 4 },
-        { name: "/collaborative-response-1/how-we-support/collaborative-response-across-system", value: 3 },
-        { name: "Others", value: 3 },
+      { name: "/wecollab", value: 38, children: [
+        { name: "/wecollab/features", value: 12, children: [
+          { name: "/wecollab/features/classrooms", value: 5 },
+          { name: "Others", value: 7 },
+        ]},
+        { name: "/wecollab/pricing", value: 8 },
+        { name: "/wecollab/FREE-trial", value: 7 },
+        { name: "Others", value: 11 },
       ]},
-      { name: "/getting-started-collaborative-response", value: 8 },
-      { name: "/collaborative-response-1/partner-successes", value: 6 },
-      { name: "/collaborative-response-1/how-we-support/contracted-services", value: 4 },
-      { name: "Others", value: 10 },
-    ]},
-    { name: "/wecollab", value: 38, children: [
-      { name: "/wecollab/features", value: 12, children: [
-        { name: "/wecollab/features/classrooms", value: 5 },
-        { name: "/wecollab/features/schools", value: 3 },
-        { name: "Others", value: 4 },
+      { name: "/resources-and-samples", value: 34, children: [
+        { name: "/resources-and-samples/collaborative-structures", value: 9 },
+        { name: "/resources-and-samples/general-resources", value: 8 },
+        { name: "Others", value: 17 },
       ]},
-      { name: "/wecollab/pricing", value: 8, children: [
-        { name: "/wecollab/FREE-trial", value: 4 },
-        { name: "Others", value: 4 },
+      { name: "/publications", value: 28 },
+      { name: "/who-we-are", value: 24 },
+      { name: "/events", value: 21 },
+      { name: "/free", value: 19 },
+      { name: "Others", value: 734 },
+    ]},
+    { name: "/wecollab", value: 620, children: [
+      { name: "/wecollab/pricing", value: 96, children: [
+        { name: "/wecollab/FREE-trial", value: 31 },
+        { name: "/wecollab/ongoing-support", value: 12 },
+        { name: "Others", value: 53 },
       ]},
-      { name: "/wecollab/FREE-trial", value: 7 },
-      { name: "/wecollab/features/classrooms", value: 5 },
-      { name: "/wecollab/ongoing-support", value: 3 },
-      { name: "Others", value: 3 },
-    ]},
-    { name: "/resources-and-samples", value: 34, children: [
-      { name: "/resources-and-samples/collaborative-structures", value: 9, children: [
-        { name: "/resources-and-samples/collaborative-structures/collaborative-team-meetings", value: 4 },
-        { name: "Others", value: 5 },
+      { name: "/wecollab/features", value: 74, children: [
+        { name: "/wecollab/features/classrooms", value: 22 },
+        { name: "/wecollab/features/schools", value: 16 },
+        { name: "Others", value: 36 },
       ]},
-      { name: "/resources-and-samples/general-resources", value: 8 },
-      { name: "/resources-and-samples/collaborative-leaders-toolkit", value: 6 },
-      { name: "/resources-and-samples/data-and-evidence", value: 4 },
-      { name: "/resources-and-samples/continuum-supports", value: 3 },
-      { name: "Others", value: 4 },
+      { name: "/wecollab/FREE-trial", value: 41 },
+      { name: "/", value: 30 },
+      { name: "Others", value: 379 },
     ]},
-    { name: "/publications", value: 28, children: [
-      { name: "/publications/blog-posts", value: 9 },
-      { name: "/publications/courses", value: 7 },
-      { name: "/publications/membership", value: 4 },
-      { name: "Others", value: 8 },
+    { name: "/publications/blog-posts", value: 480, children: [
+      { name: "/publications", value: 58 },
+      { name: "/publications/courses", value: 31 },
+      { name: "/", value: 24 },
+      { name: "Others", value: 367 },
     ]},
-    { name: "/who-we-are", value: 24, children: [
-      { name: "/who-we-are/our-team", value: 7 },
-      { name: "/who-we-are/testimonials", value: 6 },
-      { name: "Others", value: 11 },
+    { name: "/collaborative-response-1", value: 355, children: [
+      { name: "/collaborative-response/overview", value: 61 },
+      { name: "/collaborative-response-1/how-we-support", value: 44 },
+      { name: "/getting-started-collaborative-response", value: 28 },
+      { name: "Others", value: 222 },
     ]},
-    { name: "/events", value: 21, children: [
-      { name: "/events/retreat", value: 6 },
-      { name: "Others", value: 15 },
+    { name: "/resources-and-samples", value: 288, children: [
+      { name: "/resources-and-samples/general-resources", value: 52 },
+      { name: "/resources-and-samples/collaborative-structures", value: 47 },
+      { name: "Others", value: 189 },
     ]},
-    { name: "/free", value: 19 },
-    { name: "/store", value: 14 },
-    { name: "/speaking", value: 9 },
-    { name: "/who-we-are/testimonials", value: 7 },
-    { name: "/publications/blog-posts", value: 7 },
-    { name: "/wecollab/pricing", value: 6 },
-    { name: "/events/retreat", value: 5 },
-    { name: "/who-we-are/our-team", value: 5 },
-    { name: "/publications/courses", value: 4 },
-    { name: "/search", value: 3 },
-    { name: "/login", value: 3 },
-    { name: "Others", value: 43 },
+    { name: "/events", value: 214, children: [
+      { name: "/events/retreat", value: 39 },
+      { name: "Others", value: 175 },
+    ]},
+    { name: "/free", value: 186 },
+    { name: "/publications/courses", value: 143 },
+    { name: "/who-we-are", value: 118 },
+    { name: "/store", value: 96 },
+    { name: "/speaking", value: 71 },
+    { name: "/wecollab/pricing", value: 64 },
+    { name: "Others", value: 215 },
   ]
 };
 
 const FALLBACK_EVENTS_BY_PAGE = [
-  { page: "/wecollab", event: "click", count: 14, sessions: 11, keyEvent: false },
-  { page: "/wecollab", event: "scroll_depth_75", count: 6, sessions: 5, keyEvent: false },
-  { page: "/collaborative-response-1", event: "click", count: 9, sessions: 7, keyEvent: false },
-  { page: "/collaborative-response-1", event: "view_search_results", count: 2, sessions: 2, keyEvent: false },
-  { page: "/free", event: "file_download", count: 7, sessions: 6, keyEvent: false },
-  { page: "/wecollab/pricing", event: "generate_lead", count: 6, sessions: 6, keyEvent: true },
-  { page: "/resources-and-samples", event: "click", count: 5, sessions: 4, keyEvent: false },
-  { page: "/wecollab/FREE-trial", event: "sign_up", count: 4, sessions: 4, keyEvent: true },
-  { page: "/publications/courses", event: "generate_lead", count: 1, sessions: 1, keyEvent: true },
+  { page: "/wecollab", event: "click", count: 214, sessions: 168, keyEvent: false },
+  { page: "/wecollab", event: "scroll_depth_75", count: 96, sessions: 81, keyEvent: false },
+  { page: "/collaborative-response-1", event: "click", count: 139, sessions: 97, keyEvent: false },
+  { page: "/collaborative-response-1", event: "view_search_results", count: 22, sessions: 19, keyEvent: false },
+  { page: "/free", event: "file_download", count: 87, sessions: 66, keyEvent: false },
+  { page: "/wecollab/pricing", event: "generate_lead", count: 46, sessions: 44, keyEvent: true },
+  { page: "/resources-and-samples", event: "click", count: 65, sessions: 51, keyEvent: false },
+  { page: "/wecollab/FREE-trial", event: "sign_up", count: 34, sessions: 33, keyEvent: true },
+  { page: "/publications/courses", event: "generate_lead", count: 11, sessions: 11, keyEvent: true },
 ];
 
-// Sessions that included each page at all — the denominator the Events
-// table reads event counts against.
 const FALLBACK_PAGE_SESSIONS = {
-  "/wecollab": 38, "/collaborative-response-1": 52, "/free": 19,
-  "/wecollab/pricing": 14, "/resources-and-samples": 34,
-  "/wecollab/FREE-trial": 11, "/publications/courses": 11,
+  "/wecollab": 658, "/collaborative-response-1": 407, "/free": 205,
+  "/wecollab/pricing": 160, "/resources-and-samples": 335,
+  "/wecollab/FREE-trial": 79, "/publications/courses": 174,
 };
 
 /* =========================================================
    2. NAMING, COLOURS, SHARED HELPERS
 ========================================================= */
 const SITE = "https://www.jigsawlearning.ca";
-const UNLINKABLE = new Set(["Others", "Other pages", "Other events"]);
+const UNLINKABLE = new Set([ROOT_NAME, "Others", "Other pages", "Other events", "(not set)"]);
 function urlFor(path){ return UNLINKABLE.has(path) ? null : SITE + path; }
 
 const LABELS = {
@@ -440,6 +422,7 @@ const LABELS = {
   "/login": "Log In",
 };
 function friendly(path){
+  if (path === ROOT_NAME) return 'All sessions';
   if (LABELS[path]) return LABELS[path];
   if (path === '/') return 'Homepage';
   if (path === 'Others') return 'Other pages';
@@ -450,12 +433,13 @@ function humanizeEventName(name){
   return String(name).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-const COLORS = { home:'#B8C0CC', product:'#E3A857', company:'#4EC0C9', conversion:'#D9694F', other:'#6E7580' };
+const COLORS = { root:'#2E3644', home:'#B8C0CC', product:'#E3A857', company:'#4EC0C9', conversion:'#D9694F', other:'#6E7580' };
 const KEY_EVENT_COLOR = '#B8860B';
 const PRODUCT = ['/collaborative-response', '/getting-started-collaborative-response', '/wecollab', '/resources-and-samples', '/publications'];
 const COMPANY = ['/who-we-are', '/events', '/speaking'];
 const CONVERSION = ['/free', '/store'];
 function categorize(path){
+  if (path === ROOT_NAME) return 'root';
   if (path === '/') return 'home';
   if (UNLINKABLE.has(path)) return 'other';
   if (PRODUCT.some(p => path.startsWith(p))) return 'product';
@@ -473,77 +457,63 @@ function moveTip(evt){
   const pad = 14;
   let x = evt.clientX + pad, y = evt.clientY + pad;
   if (x + 300 > window.innerWidth) x = evt.clientX - 300 - pad;
-  if (y + 100 > window.innerHeight) y = evt.clientY - 100 - pad;
+  if (y + 110 > window.innerHeight) y = evt.clientY - 110 - pad;
   tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
 }
 function hideTip(){ tooltip.classList.remove('show'); }
 
-/* ---- text measuring, so labels truncate to the real space available ---- */
+/* ---- label fitting, so text truncates to the space a column really has ---- */
 const _measure = document.createElement('canvas').getContext('2d');
+function textWidth(text, font){ _measure.font = font; return _measure.measureText(text).width; }
 function fit(text, font, maxW){
-  _measure.font = font;
-  if (_measure.measureText(text).width <= maxW) return text;
+  if (textWidth(text, font) <= maxW) return text;
   let t = text;
-  while (t.length > 1 && _measure.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+  while (t.length > 1 && textWidth(t + '…', font) > maxW) t = t.slice(0, -1);
   return t + '…';
 }
 
 /* =========================================================
    3. STATE
 ========================================================= */
-const MAX_ROWS = 6;                 // next steps shown per card before the rest fold into "Other pages"
 const state = {
   tree: FALLBACK_TREE,
   eventRows: FALLBACK_EVENTS_BY_PAGE,
+  pageSessions: FALLBACK_PAGE_SESSIONS,
   eventsError: null,
   periodLabel: '',
   totalSessions: null,
-  pageSessions: null,
   view: 'pathway',
-  selected: [],                     // entry-page paths, in the order they were ticked
-  drill: new Map(),                 // entry path -> array of deeper paths currently open
-  mode: new Map(),                  // entry path -> 'steps' | 'tree'
+  selected: [],            // starting-page paths currently on the chart
+  expanded: new Set(),      // keys of nodes whose next step is showing
   pickerFilter: '',
   evSearch: '',
   evKeyOnly: false,
-  evChip: null,                     // event name filter from the chips
+  evChip: null,
   evSort: { key: 'count', dir: -1 },
   evOpen: new Set(),
 };
 
-// Real pages only. "Others" is a rollup of the long tail rather than a
-// page anyone can visit, so it can't have a chart of its own — its total
-// is reported under the picker instead.
-function entryPages(){
-  return (state.tree.children || [])
-    .filter(c => c.value > 0 && !UNLINKABLE.has(c.name))
-    .slice()
-    .sort((a, b) => b.value - a.value);
-}
-function otherPagesTotal(){
-  return (state.tree.children || [])
-    .filter(c => UNLINKABLE.has(c.name))
-    .reduce((s, c) => s + c.value, 0);
-}
 // Biggest first, but the "Other pages" rollup always sits last — it's a
 // leftover bucket, not a page competing for attention with the rest.
 function byValue(a, b){
   const bucket = (UNLINKABLE.has(a.name) ? 1 : 0) - (UNLINKABLE.has(b.name) ? 1 : 0);
   return bucket || (b.value - a.value);
 }
-function findChild(node, name){ return (node.children || []).find(c => c.name === name) || null; }
-function nodeAt(entryPath, drillArr){
-  let node = findChild(state.tree, entryPath);
-  for (const p of (drillArr || [])){
-    const next = node && findChild(node, p);
-    if (!next) break;
-    node = next;
-  }
-  return node;
+function startingPages(){
+  return (state.tree.children || [])
+    .filter(c => c.value > 0 && !UNLINKABLE.has(c.name))
+    .slice().sort(byValue);
 }
+function rolledUpTotal(){
+  return (state.tree.children || [])
+    .filter(c => UNLINKABLE.has(c.name))
+    .reduce((s, c) => s + c.value, 0);
+}
+function findChild(node, name){ return (node.children || []).find(c => c.name === name) || null; }
+function keyOf(chain){ return chain.join('\u0001'); }
 
-/* Where each page sits in the journey, and the chain that leads to it.
-   Shallowest occurrence wins, so a page reached several ways is
+/* Where each page sits in a journey, and the chain that leads to it.
+   Shallowest occurrence wins, so a page reachable several ways is
    described by its earliest appearance. */
 let chainIndex = new Map();
 function buildChainIndex(){
@@ -560,51 +530,44 @@ function buildChainIndex(){
   walk(state.tree, []);
 }
 function stepLabel(path){
-  if (path === '/') return 'Homepage';
   const chain = chainIndex.get(path);
   if (!chain) return null;
-  return chain.length === 1 ? 'Page 2' : 'Page ' + (chain.length + 1);
+  return chain.length === 1 ? 'Starting page' : 'Page ' + chain.length;
 }
 
 /* =========================================================
    4. HEADER STATS
 ========================================================= */
 function renderStats(){
-  const el = document.getElementById('stats');
-  const root = state.tree.value || 0;
-  const onward = (state.tree.children || []).reduce((s, c) => s + c.value, 0);
-  const deepest = (function depth(node){
-    if (!node.children || !node.children.length) return 1;
-    return 1 + Math.max(...node.children.map(depth));
-  })(state.tree);
+  const total = state.tree.value || 0;
+  const shown = state.selected.reduce((s, p) => {
+    const n = findChild(state.tree, p);
+    return s + (n ? n.value : 0);
+  }, 0);
   const stats = [
-    { n: fmt(root), l: 'sessions started on the homepage' },
-    { n: fmt(onward), l: 'went on to another page' },
-    { n: deepest + ' pages', l: 'longest journey traced' },
+    { n: fmt(total), l: 'sessions in total' },
+    { n: fmt(startingPages().length), l: 'pages sessions start on' },
+    { n: total ? Math.round((shown / total) * 100) + '%' : '0%', l: 'of sessions on the chart' },
   ];
-  if (state.totalSessions){
-    stats.push({ n: Math.round((root / state.totalSessions) * 100) + '%',
-                 l: 'of all ' + fmt(state.totalSessions) + ' site sessions' });
-  }
-  el.innerHTML = stats.map(s => `<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
+  document.getElementById('stats').innerHTML =
+    stats.map(s => `<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
 }
 
 /* =========================================================
-   5. PATHWAY — page picker
+   5. THE PICKER
 ========================================================= */
 function renderPicker(){
   const list = document.getElementById('pickerList');
   const q = state.pickerFilter.trim().toLowerCase();
-  const rows = entryPages().filter(c => {
-    if (!q) return true;
-    return friendly(c.name).toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
-  });
+  const rows = startingPages().filter(c =>
+    !q || friendly(c.name).toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
+
   list.innerHTML = '';
   if (!rows.length){
-    list.innerHTML = '<p class="picker-empty">No page matches that.</p>';
+    list.innerHTML = '<p class="picker-note">No page matches that.</p>';
     return;
   }
-  const rollup = otherPagesTotal();
+  const total = state.tree.value || 1;
   rows.forEach(c => {
     const on = state.selected.includes(c.name);
     const label = document.createElement('label');
@@ -614,164 +577,117 @@ function renderPicker(){
       `<span class="dot" style="background:${colorFor(c.name)}"></span>` +
       `<span class="nm" title="${c.name}">${friendly(c.name)}</span>` +
       `<span class="c">${fmt(c.value)}</span>`;
-    label.querySelector('input').addEventListener('change', (e) => {
-      togglePage(c.name, e.target.checked);
-    });
+    label.title = friendly(c.name) + ' — ' + fmt(c.value) + ' sessions started here (' +
+      ((c.value / total) * 100).toFixed(1) + '% of all sessions)';
+    label.querySelector('input').addEventListener('change', e => toggleStart(c.name, e.target.checked));
     list.appendChild(label);
   });
+
+  const rollup = rolledUpTotal();
   if (rollup && !q){
     const note = document.createElement('p');
-    note.className = 'picker-empty';
-    note.textContent = fmt(rollup) + ' more sessions went to pages too small to list on their own.';
+    note.className = 'picker-note';
+    note.textContent = fmt(rollup) + ' sessions started on pages too small to list on their own.';
     list.appendChild(note);
   }
 }
 
-function togglePage(path, on){
+function toggleStart(path, on){
   const i = state.selected.indexOf(path);
-  if (on && i === -1) state.selected.push(path);
-  if (!on && i !== -1){ state.selected.splice(i, 1); state.drill.delete(path); state.mode.delete(path); }
+  if (on && i === -1){
+    state.selected.push(path);
+    state.expanded.add(keyOf([path])); // show its first step straight away
+  }
+  if (!on && i !== -1){
+    state.selected.splice(i, 1);
+    [...state.expanded].forEach(k => { if (k === path || k.indexOf(path + '\u0001') === 0) state.expanded.delete(k); });
+  }
   renderPicker();
-  renderBoards();
+  renderStats();
+  renderChart();
+}
+
+function selectTop(n){
+  state.selected = startingPages().slice(0, n).map(c => c.name);
+  state.expanded = new Set(state.selected.map(p => keyOf([p])));
+  renderPicker(); renderStats(); renderChart();
 }
 
 /* =========================================================
-   6. PATHWAY — one small chart per ticked page
+   6. THE CHART — one diagram, a branch per ticked page
 ========================================================= */
-function renderBoards(){
-  const grid = document.getElementById('boardGrid');
-  grid.innerHTML = '';
+const ROW_H = 25;
+const PAD_T = 14;
+const BAR_W = 6;
+const BAR_MAX = 22;
+
+// What's actually on screen: the trunk, the ticked starting pages, and
+// beneath each of those only the steps the reader has opened.
+function buildVisible(){
+  const root = { name: ROOT_NAME, value: state.tree.value || 0, depth: 0, key: '', node: state.tree, children: [] };
+  const picked = startingPages().filter(c => state.selected.includes(c.name));
+  picked.forEach(c => root.children.push(makeVisible(c, [c.name], 1)));
+  return root;
+}
+function makeVisible(node, chain, depth){
+  const key = keyOf(chain);
+  const v = { name: node.name, value: node.value, depth, key, node, children: [] };
+  if (state.expanded.has(key) && node.children && node.children.length){
+    node.children.slice().sort(byValue).forEach(c => v.children.push(makeVisible(c, chain.concat([c.name]), depth + 1)));
+  }
+  return v;
+}
+function hasNextStep(v){ return !!(v.node.children && v.node.children.length) && !UNLINKABLE.has(v.name); }
+
+function renderChart(){
+  const svg = document.getElementById('chart');
+  const heads = document.getElementById('colHeads');
+  const scroll = document.getElementById('chartScroll');
+  svg.innerHTML = '';
+  heads.innerHTML = '';
+  const oldEmpty = scroll.querySelector('.chart-empty');
+  if (oldEmpty) oldEmpty.remove();
+
   if (!state.selected.length){
-    grid.classList.remove('board-grid');
+    svg.setAttribute('width', 0); svg.setAttribute('height', 0);
     const box = document.createElement('div');
-    box.className = 'empty-boards';
-    box.innerHTML = '<p>Nothing charted yet. Tick a page on the left and its chart appears here — tick more and they line up side by side.</p><button type="button">Chart the top 5 pages</button>';
-    box.querySelector('button').addEventListener('click', selectTop);
-    grid.appendChild(box);
+    box.className = 'chart-empty';
+    box.innerHTML = '<p>Nothing on the chart yet. Tick a starting page on the left and its branch appears here — tick more and they stack up on the same diagram.</p><button type="button">Add the top 5 pages</button>';
+    box.querySelector('button').addEventListener('click', () => selectTop(5));
+    scroll.appendChild(box);
     return;
   }
-  grid.classList.add('board-grid');
-  state.selected.forEach(path => {
-    const entry = findChild(state.tree, path);
-    if (entry) grid.appendChild(buildBoard(entry));
-  });
-  // Charts size themselves to their card, so they can only be drawn
-  // once the cards are actually in the page and have a real width.
-  requestAnimationFrame(() => state.selected.forEach(drawBoardChart));
-}
 
-function buildBoard(entry){
-  const path = entry.name;
-  const drill = state.drill.get(path) || [];
-  const current = nodeAt(path, drill);
-  const mode = state.mode.get(path) || 'steps';
-  const rootTotal = state.tree.value || 1;
+  const root = buildVisible();
 
-  const card = document.createElement('article');
-  card.className = 'board';
-  card.dataset.path = path;
+  // Vertical placement: each visible leaf gets a row, each parent sits
+  // level with the middle of its own children.
+  let slot = 0, maxDepth = 0;
+  (function place(v){
+    maxDepth = Math.max(maxDepth, v.depth);
+    if (!v.children.length){ v.y = PAD_T + slot * ROW_H + ROW_H / 2; slot++; return; }
+    v.children.forEach(place);
+    v.y = (v.children[0].y + v.children[v.children.length - 1].y) / 2;
+  })(root);
 
-  const share = ((entry.value / rootTotal) * 100);
-  const url = urlFor(path);
-  const head = document.createElement('div');
-  head.className = 'board-head';
-  head.innerHTML =
-    `<span class="dot" style="background:${colorFor(path)}"></span>` +
-    `<span class="board-title"><span class="nm" title="${path}">${friendly(path)}</span>` +
-    `<span class="sub">${fmt(entry.value)} sessions · ${share.toFixed(1)}% of homepage sessions</span></span>` +
-    (url ? `<button class="icon-btn ext" type="button" title="Open ${path} in a new tab">↗</button>` : '') +
-    `<button class="icon-btn close" type="button" title="Remove this chart">✕</button>`;
-  if (url) head.querySelector('.ext').addEventListener('click', () => window.open(url, '_blank', 'noopener'));
-  head.querySelector('.close').addEventListener('click', () => togglePage(path, false));
-  card.appendChild(head);
+  const cols = maxDepth + 1;
+  const avail = Math.max(320, scroll.clientWidth - 28);
+  const COL_W = Math.max(196, Math.min(300, Math.floor(avail / cols)));
+  const W = cols * COL_W;
+  const H = PAD_T * 2 + slot * ROW_H;
 
-  // breadcrumb — the full path, one line, always visible
-  const crumbs = document.createElement('div');
-  crumbs.className = 'crumbs';
-  const parts = [{ label: 'Homepage', to: null }, { label: friendly(path), to: 0 }]
-    .concat(drill.map((p, i) => ({ label: friendly(p), to: i + 1 })));
-  parts.forEach((p, i) => {
-    if (i) crumbs.insertAdjacentHTML('beforeend', '<span class="sep">›</span>');
-    if (i === parts.length - 1 || p.to === null){
-      const span = document.createElement('span');
-      span.className = i === parts.length - 1 ? 'here' : '';
-      span.textContent = p.label;
-      crumbs.appendChild(span);
-    } else {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = p.label;
-      b.addEventListener('click', () => { state.drill.set(path, drill.slice(0, p.to)); renderBoards(); });
-      crumbs.appendChild(b);
-    }
-  });
-  card.appendChild(crumbs);
-
-  const body = document.createElement('div');
-  body.className = 'board-body';
-  card.appendChild(body);
-
-  const kids = (current && current.children) ? current.children.slice().sort(byValue) : [];
-
-  if (!kids.length){
-    body.innerHTML = `<div class="leaf-note">${fmt(current ? current.value : 0)} sessions reached this page and none went on to another page we can trace — it's the end of the journey.</div>`;
-    return card;
-  }
-
-  if (mode === 'tree'){
-    body.appendChild(buildTreeList(current));
-  } else {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('class', 'flow');
-    body.appendChild(svg);
-  }
-
-  const foot = document.createElement('div');
-  foot.className = 'board-foot';
-  const shown = Math.min(kids.length, MAX_ROWS);
-  foot.innerHTML = `<span>${kids.length} next ${kids.length === 1 ? 'step' : 'steps'}${kids.length > shown ? ` · showing top ${shown}` : ''}</span>`;
-  const btn = document.createElement('button');
-  btn.className = 'toggle'; btn.type = 'button';
-  btn.textContent = mode === 'tree' ? 'Show steps' : 'Show full path';
-  btn.addEventListener('click', () => { state.mode.set(path, mode === 'tree' ? 'steps' : 'tree'); renderBoards(); });
-  foot.appendChild(btn);
-  card.appendChild(foot);
-
-  return card;
-}
-
-/* ---- the flow drawing itself: one page on the left, its next steps
-       on the right, ribbon thickness = share of the sessions ---- */
-const ROW_H = 27;
-function drawBoardChart(path){
-  const card = document.querySelector(`.board[data-path="${CSS.escape(path)}"]`);
-  if (!card) return;
-  const svg = card.querySelector('svg.flow');
-  if (!svg) return;
-
-  const drill = state.drill.get(path) || [];
-  const current = nodeAt(path, drill);
-  let kids = (current.children || []).slice().sort(byValue);
-  if (kids.length > MAX_ROWS){
-    const keep = kids.filter(k => !UNLINKABLE.has(k.name)).slice(0, MAX_ROWS - 1);
-    const foldedVal = kids.filter(k => !keep.includes(k)).reduce((s, k) => s + k.value, 0);
-    kids = keep.concat([{ name: 'Others', value: foldedVal }]);
-  }
-
-  const W = Math.max(300, card.querySelector('.board-body').clientWidth);
-  const H = kids.length * ROW_H + 10;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.setAttribute('width', W);
   svg.setAttribute('height', H);
-  svg.innerHTML = '';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-  const SPINE_X = 0, SPINE_W = 5;
-  const TARGET_X = Math.round(Math.min(120, Math.max(74, W * 0.24)));
-  const TARGET_W = 4;
-  const LABEL_X = TARGET_X + TARGET_W + 9;
-  const mid = (SPINE_X + SPINE_W + TARGET_X) / 2;
-  const spineTop = 5, spineBottom = H - 5, spineH = spineBottom - spineTop;
-  const sum = kids.reduce((s, k) => s + k.value, 0) || 1;
+  // column headers
+  heads.style.width = W + 'px';
+  for (let d = 0; d < cols; d++){
+    const span = document.createElement('span');
+    span.style.left = (14 + d * COL_W) + 'px';
+    span.textContent = d === 0 ? 'All sessions' : d === 1 ? 'Started on' : d === 2 ? 'Then went to' : 'Page ' + d;
+    heads.appendChild(span);
+  }
 
   const ns = 'http://www.w3.org/2000/svg';
   const el = (tag, attrs, text) => {
@@ -780,109 +696,129 @@ function drawBoardChart(path){
     if (text !== undefined) n.textContent = text;
     return n;
   };
+  const rootValue = root.value || 1;
+  // Square-root scale: a branch a tenth the size of another still reads
+  // as a visible ribbon rather than a hairline.
+  const barH = v => Math.max(2.5, BAR_MAX * Math.sqrt(v / rootValue));
 
-  // the page itself — one bar, height = all of its onward sessions
-  svg.appendChild(el('rect', { x: SPINE_X, y: spineTop, width: SPINE_W, height: spineH, rx: 2, fill: colorFor(path), 'fill-opacity': .9 }));
+  const ribbonLayer = el('g', {});
+  const nodeLayer = el('g', {});
+  svg.appendChild(ribbonLayer);
+  svg.appendChild(nodeLayer);
 
-  let cursor = spineTop;
-  kids.forEach((k, i) => {
-    const srcH = Math.max(1.5, (k.value / sum) * spineH);
-    const y0s = cursor, y1s = cursor + srcH;
-    cursor += srcH;
+  const ribbons = [];  // { el, child }
+  const nodeEls = new Map(); // key -> group
 
-    const rowTop = 5 + i * ROW_H;
-    const cy = rowTop + ROW_H / 2;
-    const tH = Math.max(3, Math.min(srcH, ROW_H - 9));
-    const y0t = cy - tH / 2, y1t = cy + tH / 2;
-    const color = colorFor(k.name);
-    const drillable = !!(k.children && k.children.length) && !UNLINKABLE.has(k.name);
-    const kUrl = urlFor(k.name);
+  (function draw(v, parentChain){
+    const x = v.depth * COL_W;
+    const h = barH(v.value);
+    const color = colorFor(v.name);
+    const chain = parentChain.concat([v]);
 
-    const g = el('g', { class: 'row' + (drillable ? ' drillable' : '') });
+    // ribbons out to whichever children are showing
+    if (v.children.length){
+      const sum = v.children.reduce((s, c) => s + c.value, 0) || 1;
+      let cursor = v.y - h / 2;
+      v.children.forEach(c => {
+        const srcH = Math.max(1.2, (c.value / sum) * h);
+        const y0s = cursor, y1s = cursor + srcH;
+        cursor += srcH;
+        const cH = barH(c.value);
+        const y0t = c.y - cH / 2, y1t = c.y + cH / 2;
+        const x0 = x + BAR_W, x1 = c.depth * COL_W;
+        const mid = (x0 + x1) / 2;
+        const p = el('path', {
+          class: 'ribbon',
+          d: `M${x0},${y0s} C${mid},${y0s} ${mid},${y0t} ${x1},${y0t} L${x1},${y1t} C${mid},${y1t} ${mid},${y1s} ${x0},${y1s} Z`,
+          fill: colorFor(c.name), 'fill-opacity': .3
+        });
+        ribbonLayer.appendChild(p);
+        ribbons.push({ el: p, child: c });
+      });
+    }
 
-    g.appendChild(el('path', {
-      class: 'ribbon',
-      d: `M${SPINE_X + SPINE_W},${y0s} C${mid},${y0s} ${mid},${y0t} ${TARGET_X},${y0t} L${TARGET_X},${y1t} C${mid},${y1t} ${mid},${y1s} ${SPINE_X + SPINE_W},${y1s} Z`,
-      fill: color, 'fill-opacity': .32
-    }));
-    g.appendChild(el('rect', { x: TARGET_X, y: y0t, width: TARGET_W, height: tH, rx: 1.5, fill: color }));
+    // the node itself
+    const g = el('g', { class: 'node' + (hasNextStep(v) ? ' can-open' : '') });
+    g.appendChild(el('rect', { x, y: v.y - h / 2, width: BAR_W, height: h, rx: 2, fill: color, 'fill-opacity': v.depth === 0 ? 1 : .95 }));
+    // Sits beneath the labels so the ↗ on the right stays clickable —
+    // the row's own handlers live on the group, so they fire wherever
+    // inside the row the pointer actually lands.
+    g.appendChild(el('rect', { class: 'node-hit', x, y: v.y - ROW_H / 2, width: COL_W - 6, height: ROW_H }));
 
-    const pct = ((k.value / (current.value || sum)) * 100);
-    const valText = fmt(k.value);
-    _measure.font = '400 10px "IBM Plex Mono", monospace';
-    const valW = _measure.measureText(valText).width;
-    const extW = kUrl ? 13 : 0;
-    const chevW = drillable ? 10 : 0;
-    const nameMax = Math.max(40, W - LABEL_X - valW - extW - chevW - 14);
-    const nameFont = '500 11.5px "IBM Plex Sans", sans-serif';
+    const open = state.expanded.has(v.key);
+    const canOpen = hasNextStep(v);
+    const labelX = x + BAR_W + 8;
+    const nameX = labelX + (canOpen ? 12 : 0);
+    const valText = fmt(v.value) + (v.depth === 0 ? ' sessions' : '');
+    const valFont = '400 10px "IBM Plex Mono", monospace';
+    const valW = textWidth(valText, valFont);
+    const kUrl = urlFor(v.name);
+    const extW = kUrl ? 14 : 0;
+    const rightEdge = x + COL_W - 10;
+    const nameFont = v.depth === 0 ? '600 13px "IBM Plex Sans", sans-serif' : '500 11.5px "IBM Plex Sans", sans-serif';
+    const nameMax = Math.max(46, rightEdge - nameX - valW - extW - 12);
 
-    g.appendChild(el('text', { class: 'r-nm', x: LABEL_X, y: cy, 'dominant-baseline': 'middle' },
-      fit(friendly(k.name), nameFont, nameMax)));
-    if (drillable) g.appendChild(el('text', { class: 'r-chev', x: LABEL_X + _measure_width(fit(friendly(k.name), nameFont, nameMax), nameFont) + 5, y: cy, 'dominant-baseline': 'middle' }, '›'));
-    g.appendChild(el('text', { class: 'r-val', x: W - extW - 2, y: cy, 'dominant-baseline': 'middle', 'text-anchor': 'end' }, valText));
+    if (canOpen) g.appendChild(el('text', { class: 'n-chev', x: labelX, y: v.y, 'dominant-baseline': 'middle' }, open ? '▾' : '▸'));
+    g.appendChild(el('text', {
+      class: 'n-nm' + (v.depth === 0 ? ' root' : ''), x: nameX, y: v.y, 'dominant-baseline': 'middle'
+    }, fit(v.depth === 0 ? 'All sessions' : friendly(v.name), nameFont, nameMax)));
+    g.appendChild(el('text', {
+      class: 'n-val', x: rightEdge - extW, y: v.y, 'dominant-baseline': 'middle', 'text-anchor': 'end'
+    }, valText));
     if (kUrl){
-      const a = el('text', { class: 'r-ext', x: W - 1, y: cy, 'dominant-baseline': 'middle', 'text-anchor': 'end' }, '↗');
-      a.addEventListener('click', (e) => { e.stopPropagation(); window.open(kUrl, '_blank', 'noopener'); });
-      a.appendChild(el('title', {}, 'Open ' + k.name));
+      const a = el('text', { class: 'n-ext', x: rightEdge, y: v.y, 'dominant-baseline': 'middle', 'text-anchor': 'end' }, '↗');
+      a.addEventListener('click', e => { e.stopPropagation(); window.open(kUrl, '_blank', 'noopener'); });
+      a.appendChild(el('title', {}, 'Open ' + v.name));
       g.appendChild(a);
     }
 
-    const hit = el('rect', { class: 'row-hit', x: 0, y: rowTop, width: W, height: ROW_H });
-    hit.addEventListener('mousemove', (e) => moveTip(e));
-    hit.addEventListener('mouseenter', (e) => {
-      g.querySelector('.ribbon').setAttribute('fill-opacity', .62);
-      const next = drillable ? '<div class="t-meta" style="color:var(--cyan);margin-top:4px;">click to see where these sessions went next</div>'
-        : UNLINKABLE.has(k.name) ? '<div class="t-meta" style="margin-top:4px;">a group of smaller pages, not one single page</div>'
+    g.addEventListener('mousemove', e => moveTip(e));
+    g.addEventListener('mouseenter', e => {
+      highlight(chain);
+      const parent = parentChain[parentChain.length - 1];
+      const pct = parent ? ((v.value / (parent.value || 1)) * 100).toFixed(1) + '% of ' +
+        (parent.depth === 0 ? 'all sessions' : friendly(parent.name)) : null;
+      const action = v.depth === 0 ? ''
+        : canOpen ? `<div class="t-meta" style="color:var(--cyan);margin-top:4px;">click to ${open ? 'close' : 'open'} the next step</div>`
+        : UNLINKABLE.has(v.name) ? '<div class="t-meta" style="margin-top:4px;">a group of smaller pages, not one single page</div>'
         : '<div class="t-meta" style="margin-top:4px;">no onward pages traced from here</div>';
       showTip(
-        `<div class="t-path">${friendly(k.name)}</div>` +
-        (UNLINKABLE.has(k.name) ? '' : `<div class="t-sub">${k.name}</div>`) +
-        `<div class="t-meta"><span class="t-val">${fmt(k.value)}</span> sessions · ${pct.toFixed(1)}% of ${friendly(current.name)}</div>` + next, e);
+        `<div class="t-path">${v.depth === 0 ? 'All sessions' : friendly(v.name)}</div>` +
+        (UNLINKABLE.has(v.name) ? '' : `<div class="t-sub">${v.name}</div>`) +
+        `<div class="t-meta"><span class="t-val">${fmt(v.value)}</span> sessions${pct ? ' · ' + pct : ''}</div>` + action, e);
     });
-    hit.addEventListener('mouseleave', () => { g.querySelector('.ribbon').setAttribute('fill-opacity', .32); hideTip(); });
-    if (drillable) hit.addEventListener('click', () => {
-      state.drill.set(path, (state.drill.get(path) || []).concat([k.name]));
+    g.addEventListener('mouseleave', () => { clearHighlight(); hideTip(); });
+    if (canOpen) g.addEventListener('click', () => {
+      if (state.expanded.has(v.key)) collapseFrom(v.key); else state.expanded.add(v.key);
       hideTip();
-      renderBoards();
+      renderChart();
     });
-    g.appendChild(hit);
-    svg.appendChild(g);
-  });
-}
-function _measure_width(text, font){ _measure.font = font; return _measure.measureText(text).width; }
+    nodeLayer.appendChild(g);
+    nodeEls.set(v.key, g);
 
-/* ---- "Show full path": the same branch as an indented list ---- */
-function buildTreeList(node){
-  const wrap = document.createElement('div');
-  wrap.className = 'tree';
-  const max = Math.max(...(node.children || [{ value: 1 }]).map(c => c.value), 1);
-  const add = (n, depth) => {
-    (n.children || []).slice().sort(byValue).slice(0, MAX_ROWS).forEach(c => {
-      const row = document.createElement('div');
-      row.className = 'tree-row';
-      row.style.paddingLeft = (depth * 12) + 'px';
-      const w = Math.max(3, Math.round((c.value / max) * 42));
-      const url = urlFor(c.name);
-      row.innerHTML =
-        `<span class="bar" style="width:${w}px;background:${colorFor(c.name)}"></span>` +
-        `<span class="nm">${url ? `<a href="${url}" target="_blank" rel="noopener" title="${c.name}">${friendly(c.name)}</a>` : friendly(c.name)}</span>` +
-        `<span class="c">${fmt(c.value)}</span>`;
-      wrap.appendChild(row);
-      if (depth < 3) add(c, depth + 1);
-    });
-  };
-  add(node, 0);
-  return wrap;
+    v.children.forEach(c => draw(c, chain));
+  })(root, []);
+
+  // Hovering a page dims everything that isn't on the way to it.
+  function highlight(chain){
+    const keys = new Set(chain.map(v => v.key));
+    ribbons.forEach(r => r.el.setAttribute('fill-opacity', keys.has(r.child.key) ? .72 : .07));
+    nodeEls.forEach((g, key) => g.classList.toggle('faded', !keys.has(key)));
+  }
+  function clearHighlight(){
+    ribbons.forEach(r => r.el.setAttribute('fill-opacity', .3));
+    nodeEls.forEach(g => g.classList.remove('faded'));
+  }
 }
 
-function selectTop(){
-  state.selected = entryPages().slice(0, 5).map(c => c.name);
-  renderPicker();
-  renderBoards();
+// Closing a step closes everything opened underneath it too, so
+// reopening it later starts from a clean single step.
+function collapseFrom(key){
+  [...state.expanded].forEach(k => { if (k === key || k.indexOf(key + '\u0001') === 0) state.expanded.delete(k); });
 }
 
 /* =========================================================
-   7. EVENTS — a table of what happened, and where
+   7. EVENTS TABLE
 ========================================================= */
 // Sessions that included a page. Deliberately not a sum of its event
 // rows: one session firing two different events on a page would be
@@ -904,7 +840,6 @@ function eventGroups(){
     events: evs.slice().sort((a, b) => b.count - a.count),
     count: evs.reduce((s, e) => s + e.count, 0),
     sessions: pageSessionsFor(page),
-    hasSessions: pageSessionsFor(page) !== null || evs.some(e => e.sessions !== undefined && e.sessions !== null),
     keyCount: evs.filter(e => e.keyEvent).reduce((s, e) => s + e.count, 0),
   }));
 
@@ -918,10 +853,7 @@ function eventGroups(){
         return friendly(g.page).toLowerCase().includes(q) || g.page.toLowerCase().includes(q) ||
                humanizeEventName(e.event).toLowerCase().includes(q) || e.event.toLowerCase().includes(q);
       });
-      return Object.assign({}, g, {
-        events,
-        count: events.reduce((s, e) => s + e.count, 0),
-      });
+      return Object.assign({}, g, { events, count: events.reduce((s, e) => s + e.count, 0) });
     }).filter(g => g.events.length);
   }
 
@@ -933,7 +865,7 @@ function eventGroups(){
       const bv = (chainIndex.get(b.page) || { length: 99 }).length;
       return dir * (av - bv);
     }
-    if (key === 'sessions') return dir * (a.sessions - b.sessions);
+    if (key === 'sessions') return dir * ((a.sessions || 0) - (b.sessions || 0));
     return dir * (a.count - b.count);
   });
   return groups;
@@ -983,7 +915,7 @@ function renderEvents(){
   }
 
   const maxCount = Math.max(...groups.map(g => g.count), 1);
-  const anySessions = groups.some(g => g.hasSessions);
+  const anySessions = groups.some(g => g.sessions !== null);
 
   const table = document.createElement('table');
   table.className = 'ev';
@@ -1002,7 +934,7 @@ function renderEvents(){
     th.addEventListener('click', () => {
       const k = th.dataset.sort;
       if (state.evSort.key === k) state.evSort.dir *= -1;
-      else state.evSort = { key: k, dir: k === 'page' || k === 'step' ? 1 : -1 };
+      else state.evSort = { key: k, dir: (k === 'page' || k === 'step') ? 1 : -1 };
       renderEvents();
     });
   });
@@ -1028,16 +960,15 @@ function renderEvents(){
       `<td class="num">${fmt(g.count)}</td>` +
       `<td class="barcell"><div class="track"><div class="fill" style="width:${Math.max(3, (g.count / maxCount) * 100)}%;background:${colorFor(g.page)}"></div></div></td>` +
       `<td><span class="row-actions">${chain ? '<button type="button" class="see-path">See path</button>' : ''}${url ? `<a href="${url}" target="_blank" rel="noopener">Open ↗</a>` : ''}</span></td>`;
+
     const toggle = () => {
       if (open) state.evOpen.delete(g.page); else state.evOpen.add(g.page);
       renderEvents();
     };
     tr.addEventListener('click', toggle);
-    tr.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
-    });
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
     const seePath = tr.querySelector('.see-path');
-    if (seePath) seePath.addEventListener('click', (e) => { e.stopPropagation(); focusChain(chain); });
+    if (seePath) seePath.addEventListener('click', e => { e.stopPropagation(); focusChain(chain); });
     tr.querySelectorAll('a').forEach(a => a.addEventListener('click', e => e.stopPropagation()));
     tbody.appendChild(tr);
 
@@ -1060,23 +991,20 @@ function renderEvents(){
   wrap.appendChild(table);
 }
 
-/* Jump from an events row back into the Pathway view, with that page's
-   own chart open and drilled to exactly where the page sits. */
+// Jump from an events row to the Pathway chart, with that page's branch
+// ticked and every step down to it already open.
 function focusChain(chain){
   if (!chain || !chain.length) return;
-  const entry = chain[0];
-  if (!state.selected.includes(entry)) state.selected.push(entry);
-  state.drill.set(entry, chain.slice(1, -1));
-  state.mode.set(entry, 'steps');
+  const start = chain[0];
+  if (!state.selected.includes(start)) state.selected.push(start);
+  for (let i = 1; i <= chain.length; i++) state.expanded.add(keyOf(chain.slice(0, i)));
   setView('pathway');
-  requestAnimationFrame(() => {
-    const card = document.querySelector(`.board[data-path="${CSS.escape(entry)}"]`);
-    if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  const scroll = document.getElementById('chartScroll');
+  if (scroll && scroll.scrollIntoView) scroll.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* =========================================================
-   8. VIEW SWITCHING, PERIOD LOADING
+   8. VIEWS, PERIOD LOADING
 ========================================================= */
 function setView(view){
   state.view = view;
@@ -1086,18 +1014,22 @@ function setView(view){
   document.getElementById('legend').style.display = view === 'pathway' ? '' : 'none';
   document.getElementById('footerMain').textContent = view === 'events'
     ? 'Counts are sessions and the number of times each event fired. Gold ★ marks a Key Event — Google Analytics\' term for what used to be called a conversion. Automatic events (page views, scrolls, session starts) are left out so real actions stand out.'
-    : 'Counts are sessions — one visit by one person, however many pages they open in it. A page marked ↗ opens the live page in a new tab.';
+    : 'Counts are sessions — one visit by one person, however many pages they open in it. The figure at the trunk is every session on the site in the period, and the branches beneath it are the pages those sessions started on. A page marked ↗ opens the live page in a new tab.';
   renderCurrent();
 }
 function renderCurrent(){
-  if (state.view === 'pathway'){ renderPicker(); renderBoards(); }
+  if (state.view === 'pathway'){ renderPicker(); renderStats(); renderChart(); }
   else renderEvents();
 }
 
 document.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
 document.getElementById('pickerSearch').addEventListener('input', e => { state.pickerFilter = e.target.value; renderPicker(); });
-document.getElementById('pickTop').addEventListener('click', selectTop);
-document.getElementById('pickClear').addEventListener('click', () => { state.selected = []; state.drill.clear(); state.mode.clear(); renderPicker(); renderBoards(); });
+document.getElementById('pickTop').addEventListener('click', () => selectTop(5));
+document.getElementById('pickAll').addEventListener('click', () => selectTop(startingPages().length));
+document.getElementById('pickClear').addEventListener('click', () => {
+  state.selected = []; state.expanded.clear();
+  renderPicker(); renderStats(); renderChart();
+});
 document.getElementById('evSearch').addEventListener('input', e => { state.evSearch = e.target.value; renderEvents(); });
 document.getElementById('evAll').addEventListener('click', () => {
   state.evKeyOnly = false;
@@ -1112,12 +1044,12 @@ document.getElementById('evKey').addEventListener('click', () => {
   renderEvents();
 });
 
-// Cards size their chart to their own width, so a window resize needs a redraw.
+// Columns size themselves to the space available, so a resize redraws.
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   if (state.view !== 'pathway') return;
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => state.selected.forEach(drawBoardChart), 120);
+  resizeTimer = setTimeout(renderChart, 120);
 });
 
 /* ---- live feed ---- */
@@ -1135,30 +1067,39 @@ function setActivePeriodButton(mode, value){
   });
 }
 
-function applyData(tree, eventRows, eventsError, pageSessions){
-  state.pageSessions = pageSessions || null;
+// Older deployments of the Apps Script rooted the tree at the homepage
+// rather than at all sessions. If that shape turns up, wrap it so the
+// chart still works — the trunk just reads as one branch.
+function normalizeTree(tree, totalSessions){
+  if (!tree) return null;
+  if (tree.name === ROOT_NAME) return tree;
+  return { name: ROOT_NAME, value: totalSessions || tree.value, children: [tree] };
+}
+
+function applyData(tree, eventRows, eventsError, pageSessions, totalSessions){
   const firstLoad = !state.selected.length;
-  state.tree = tree;
+  state.tree = normalizeTree(tree, totalSessions);
   state.eventRows = eventRows || [];
   state.eventsError = eventsError || null;
+  state.pageSessions = pageSessions || null;
   buildChainIndex();
-  renderStats();
-  // Keep the user's ticked pages if they still exist in the new period;
-  // otherwise start them off with the busiest few.
-  const available = new Set(entryPages().map(c => c.name));
+
+  // Keep whatever was ticked if it still exists in the new period,
+  // otherwise start with the busiest few.
+  const available = new Set(startingPages().map(c => c.name));
   state.selected = state.selected.filter(p => available.has(p));
-  state.drill.clear();
-  if (firstLoad || !state.selected.length) state.selected = entryPages().slice(0, 3).map(c => c.name);
+  state.expanded.clear();
+  if (firstLoad || !state.selected.length) state.selected = startingPages().slice(0, 3).map(c => c.name);
+  state.selected.forEach(p => state.expanded.add(keyOf([p])));
   state.evOpen.clear();
   renderCurrent();
 }
 
 async function loadPeriod(mode, value){
   setActivePeriodButton(mode, value);
-  state.totalSessions = null;
   if (!LIVE_DATA_URL){
     setDataStatus('Showing example data — add your Apps Script URL to go live', false);
-    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS);
+    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS, FALLBACK_TREE.value);
     return;
   }
   setDataStatus('Loading live data from Google Analytics…', null);
@@ -1173,12 +1114,11 @@ async function loadPeriod(mode, value){
     setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
     state.periodLabel = data.month || '';
     state.totalSessions = data.totalSessions || null;
-    applyData(data.tree, data.eventsByPage || [], data.eventsByPageError || null, data.pageSessions);
+    applyData(data.tree, data.eventsByPage || [], data.eventsByPageError || null, data.pageSessions, data.totalSessions);
   } catch (err){
     console.warn('Live GA4 feed unavailable, showing example data instead:', err);
     setDataStatus('Live feed unavailable right now — showing example data', false);
-    state.totalSessions = null;
-    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS);
+    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS, FALLBACK_TREE.value);
   }
 }
 
