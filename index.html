@@ -7,14 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12"></script>
 <style>
   :root{
     --bg:#F6F7F9;
     --panel:#FFFFFF;
-    --panel-2:#FFFFFF;
     --line:#E2E5EA;
+    --line-soft:#EDEFF3;
     --text:#1B2027;
     --text-dim:#525A67;
     --text-dimmer:#7C8494;
@@ -31,107 +29,174 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font-body);}
-  body{padding-bottom:64px;}
-
+  body{padding-bottom:56px;}
   .wrap{max-width:1680px;margin:0 auto;padding:0 24px;}
 
   header{border-bottom:1px solid var(--line);padding:14px 0 12px;}
-  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase;margin:0 0 10px;}
-  h1{font-family:var(--font-display);font-weight:700;font-size:clamp(24px,3.4vw,38px);margin:0 0 10px;letter-spacing:-0.01em;}
-  .sub{font-family:var(--font-body);color:var(--text-dim);font-size:14.5px;line-height:1.6;max-width:720px;margin:0 0 10px;}
-
-  .period-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
-  .data-status{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);margin:0;padding:2px 8px 2px 6px;border:1px solid var(--line);border-radius:20px;width:fit-content;line-height:1.6;}
-  .period-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
-  .period-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 8px;line-height:1.6;background:#fff;border:none;border-right:1px solid var(--line);color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease;}
-  .period-btn:last-child{border-right:none;}
-  .period-btn:hover{background:var(--bg);}
-  .period-btn.active{background:var(--root);color:#fff;}
+  .period-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+  .data-status{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);margin:0;padding:2px 8px 2px 6px;border:1px solid var(--line);border-radius:20px;line-height:1.6;}
   .data-status::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--text-dimmer);flex:none;}
-
-  .view-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-left:auto;}
-  .view-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 12px;line-height:1.6;background:#fff;border:none;border-right:1px solid var(--line);color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease;}
-  .view-btn:last-child{border-right:none;}
-  .view-btn:hover{background:var(--bg);}
-  .view-btn.active{background:var(--event);color:#fff;}
-
-  .chart-empty{padding:60px 20px;text-align:center;color:var(--text-dimmer);font-size:13px;max-width:360px;margin:0 auto;}
   .data-status.is-live{color:#1E8A6E;border-color:#BFE3D4;background:#F1FAF6;}
   .data-status.is-live::before{background:#1E8A6E;}
   .data-status.is-fallback{color:var(--amber);border-color:#F0DCB8;background:#FBF5EA;}
   .data-status.is-fallback::before{background:var(--amber);}
 
-  .stats{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content;}
-  .stat{padding:12px 22px;border-right:1px solid var(--line);}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;}
+  .seg button{font-family:var(--font-mono);font-size:9.5px;padding:4px 10px;line-height:1.6;background:#fff;border:none;border-right:1px solid var(--line);color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease;}
+  .seg button:last-child{border-right:none;}
+  .seg button:hover{background:var(--bg);}
+  .seg button.active{background:var(--root);color:#fff;}
+  .view-toggle{margin-left:auto;}
+  .view-toggle button.active{background:var(--event);color:#fff;}
+
+  .stats{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:fit-content;background:#fff;}
+  .stat{padding:10px 20px;border-right:1px solid var(--line);}
   .stat:last-child{border-right:none;}
-  .stat .n{font-family:var(--font-mono);font-size:20px;font-weight:500;color:var(--text);}
-  .stat .l{font-size:10.5px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+  .stat .n{font-family:var(--font-mono);font-size:19px;font-weight:500;color:var(--text);}
+  .stat .l{font-size:10.5px;color:var(--text-dimmer);margin-top:2px;}
 
-  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:0;}
-  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
-  .swatch{width:7px;height:7px;border-radius:2px;display:inline-block;}
-
-  .panel{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
-  .panel-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;}
+  .panel{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .panel-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;}
   .panel-head h2{font-family:var(--font-display);font-size:15px;margin:0;font-weight:500;}
-  .panel-head .hint{font-size:11.5px;color:var(--text-dimmer);font-family:var(--font-mono);}
+  .panel-head .hint{font-size:11.5px;color:var(--text-dimmer);}
 
-  .panel-body{display:flex;align-items:flex-start;}
+  /* ---------- Pathway: picker + card grid ---------- */
+  .split{display:flex;align-items:flex-start;}
+  .picker{flex:0 0 236px;width:236px;border-right:1px solid var(--line);padding:14px;position:sticky;top:0;max-height:100vh;overflow-y:auto;background:var(--panel);}
+  .picker h3{margin:0 0 3px;font-family:var(--font-display);font-size:12.5px;font-weight:500;}
+  .picker .note{margin:0 0 10px;font-size:11px;color:var(--text-dimmer);line-height:1.45;}
+  .picker-search{width:100%;font-family:var(--font-body);font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;color:var(--text);background:#fff;}
+  .picker-search::placeholder{color:var(--text-dimmer);}
+  .picker-actions{display:flex;gap:6px;margin:8px 0 6px;}
+  .mini-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);cursor:pointer;}
+  .mini-btn:hover{background:var(--bg);}
+  .pick{display:flex;align-items:center;gap:8px;padding:5px 6px;margin:0 -6px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-dim);}
+  .pick:hover{background:#EEF1F4;color:var(--text);}
+  .pick.on{color:var(--text);font-weight:500;}
+  .pick input{margin:0;accent-color:var(--cyan);cursor:pointer;flex:none;}
+  .pick .dot{width:6px;height:6px;border-radius:50%;flex:none;}
+  .pick .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pick .c{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);flex:none;}
+  .picker-empty{font-size:11.5px;color:var(--text-dimmer);padding:8px 0;}
 
-  .side-nav{flex:0 0 216px;width:216px;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow-y:auto;padding:16px 14px 20px;border-right:1px solid var(--line);background:var(--panel);z-index:6;}
-  .side-nav h3{margin:0 0 10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dimmer);}
-  .side-nav-item{display:flex;align-items:center;gap:7px;padding:6px 7px;margin:0 -7px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-dim);transition:background .12s ease,color .12s ease;}
-  .side-nav-item:hover, .side-nav-item.active{background:#EEF1F4;color:var(--text);}
-  .side-nav-item .dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px;}
-  .side-nav-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .side-nav-item .c{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);flex:0 0 auto;}
+  .boards{flex:1;min-width:0;padding:14px;}
+  .board-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;}
+  .board{border:1px solid var(--line);border-radius:8px;background:#fff;display:flex;flex-direction:column;min-width:0;}
+  .board-head{display:flex;align-items:center;gap:7px;padding:9px 10px 8px;border-bottom:1px solid var(--line-soft);}
+  .board-head .dot{width:8px;height:8px;border-radius:2px;flex:none;}
+  .board-title{flex:1;min-width:0;}
+  .board-title .nm{font-size:13px;font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .board-title .sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);}
+  .icon-btn{border:none;background:none;color:var(--text-dimmer);cursor:pointer;font-size:13px;line-height:1;padding:3px 4px;border-radius:4px;flex:none;}
+  .icon-btn:hover{background:var(--bg);color:var(--text);}
+  .icon-btn.ext{color:var(--cyan);}
+  .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:3px;padding:7px 10px 0;font-size:10.5px;color:var(--text-dimmer);font-family:var(--font-mono);}
+  .crumbs button{border:none;background:none;padding:0;font:inherit;color:var(--cyan);cursor:pointer;}
+  .crumbs button:hover{text-decoration:underline;}
+  .crumbs .sep{opacity:.55;}
+  .crumbs .here{color:var(--text-dim);}
+  .board-body{padding:4px 10px 8px;}
+  .board-foot{padding:0 10px 9px;font-size:10.5px;color:var(--text-dimmer);display:flex;justify-content:space-between;gap:8px;align-items:center;}
+  .board-foot .toggle{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);padding:2px 7px;cursor:pointer;}
+  .board-foot .toggle:hover{background:var(--bg);}
+  .leaf-note{padding:14px 10px 16px;font-size:12px;color:var(--text-dimmer);}
 
-  .col-sticky{position:sticky;top:0;z-index:4;height:30px;background:#FFFFFF;border-bottom:1px solid var(--line);}
-  .col-sticky span{position:absolute;bottom:8px;font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dimmer);white-space:nowrap;}
+  /* indented full-path list inside a card */
+  .tree{margin:2px 0 4px;}
+  .tree-row{display:flex;align-items:center;gap:7px;padding:3px 2px;font-size:11.5px;border-radius:4px;}
+  .tree-row:hover{background:#F4F6F8;}
+  .tree-row .bar{height:4px;border-radius:2px;flex:none;min-width:2px;}
+  .tree-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-dim);}
+  .tree-row .nm a{color:inherit;text-decoration:none;}
+  .tree-row .nm a:hover{color:var(--cyan);text-decoration:underline;}
+  .tree-row .c{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);flex:none;}
 
-  @media (max-width:760px){
-    .panel-body{flex-direction:column;}
-    .side-nav{position:static;width:100%;flex:none;max-height:240px;border-right:none;border-bottom:1px solid var(--line);}
-  }
+  .empty-boards{border:1px dashed var(--line);border-radius:8px;padding:34px 20px;text-align:center;color:var(--text-dim);font-size:13px;}
+  .empty-boards p{margin:0 0 12px;}
+  .empty-boards button{font-family:var(--font-body);font-size:12px;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;color:var(--text);}
+  .empty-boards button:hover{background:var(--bg);}
 
-  .chart-scroll{overflow-x:auto;overflow-y:visible;cursor:-webkit-grab;cursor:grab;background-color:#FFFFFF;background-image:
-    linear-gradient(to right, rgba(27,32,39,0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(27,32,39,0.035) 1px, transparent 1px);
-    background-size:32px 32px;}
-  .chart-scroll.grabbing, .chart-scroll.grabbing *{cursor:-webkit-grabbing !important;cursor:grabbing !important;}
-  .chart-scroll::-webkit-scrollbar{height:10px;}
-  .chart-scroll::-webkit-scrollbar-track{background:var(--panel);}
-  .chart-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
-  body.panning{user-select:none;}
+  /* ---------- flow SVG ---------- */
+  .flow{display:block;width:100%;}
+  .flow .ribbon{transition:fill-opacity .12s ease;}
+  .flow .row-hit{fill:transparent;}
+  .flow .r-nm{font-family:var(--font-body);font-size:11.5px;fill:var(--text);}
+  .flow .r-val{font-family:var(--font-mono);font-size:10px;fill:var(--text-dimmer);}
+  .flow .r-chev{font-family:var(--font-body);font-size:11px;fill:var(--text-dimmer);}
+  .flow .r-ext{font-family:var(--font-mono);font-size:10px;fill:var(--cyan);cursor:pointer;}
+  .flow g.row{cursor:default;}
+  .flow g.row.drillable{cursor:pointer;}
+  .flow g.row:hover .r-nm{fill:var(--cyan);}
 
-  svg{display:block;}
-  .node-rect{stroke:rgba(27,32,39,0.18);stroke-width:.75;transition:opacity .15s ease;}
-  .link-glyph{fill:var(--cyan);}
-  .link-path{fill:none;transition:opacity .15s ease, stroke-width .15s ease;}
-  .lbl-name{font-family:var(--font-body);fill:var(--text);pointer-events:none;}
-  .lbl-name.dim{fill:var(--text-dim);}
-  .lbl-val{font-family:var(--font-mono);fill:var(--text-dimmer);pointer-events:none;}
+  /* ---------- Events table ---------- */
+  .ev-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line-soft);}
+  .ev-tools input[type=search]{font-family:var(--font-body);font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;min-width:190px;}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;padding:10px 18px 12px;border-bottom:1px solid var(--line-soft);}
+  .chip{font-family:var(--font-mono);font-size:10px;border:1px solid var(--line);border-radius:20px;padding:3px 9px;background:#fff;color:var(--text-dim);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+  .chip:hover{background:var(--bg);}
+  .chip.on{background:var(--event);border-color:var(--event);color:#fff;}
+  .chip .k{color:var(--key-event);}
+  .chip.on .k{color:#F3E4B8;}
 
-  #tooltip{position:fixed;pointer-events:none;z-index:50;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:6px;padding:9px 13px;font-size:12.5px;line-height:1.55;box-shadow:0 12px 30px rgba(27,32,39,0.14);opacity:0;transform:translateY(4px);transition:opacity .12s ease, transform .12s ease;max-width:340px;}
+  table.ev{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.ev th{text-align:left;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--text-dimmer);font-weight:400;padding:8px 12px;border-bottom:1px solid var(--line);background:#FBFCFD;position:sticky;top:0;z-index:2;cursor:pointer;white-space:nowrap;}
+  table.ev th.no-sort{cursor:default;}
+  table.ev th .arrow{opacity:.5;}
+  table.ev td{padding:7px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  table.ev td.num{font-family:var(--font-mono);font-size:11px;text-align:right;white-space:nowrap;}
+  tr.page-row{cursor:pointer;background:#fff;}
+  tr.page-row:hover{background:#F4F6F8;}
+  tr.page-row td{border-bottom:1px solid var(--line);}
+  tr.page-row .pg{display:flex;align-items:center;gap:8px;min-width:0;}
+  tr.page-row .caret{font-size:9px;color:var(--text-dimmer);width:9px;flex:none;transition:transform .14s ease;display:inline-block;}
+  tr.page-row.open .caret{transform:rotate(90deg);}
+  tr.page-row .dot{width:8px;height:8px;border-radius:2px;flex:none;}
+  tr.page-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  tr.page-row .path{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);}
+  tr.ev-row{background:#FCFDFE;}
+  tr.ev-row td{color:var(--text-dim);}
+  tr.ev-row .ev-name{padding-left:30px;position:relative;}
+  tr.ev-row .ev-name::before{content:"";position:absolute;left:14px;top:50%;width:8px;height:1px;background:var(--line);}
+  .step{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--text-dim);white-space:nowrap;background:#fff;}
+  .step.off{color:var(--text-dimmer);border-style:dashed;}
+  .key-tag{color:var(--key-event);font-family:var(--font-mono);font-size:9.5px;margin-left:6px;white-space:nowrap;}
+  .barcell{width:120px;}
+  .barcell .track{height:5px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .barcell .fill{height:5px;border-radius:3px;}
+  .row-actions{display:flex;gap:4px;justify-content:flex-end;}
+  .row-actions button, .row-actions a{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);padding:2px 7px;cursor:pointer;text-decoration:none;white-space:nowrap;}
+  .row-actions button:hover, .row-actions a:hover{background:var(--bg);color:var(--text);}
+  .table-scroll{max-height:72vh;overflow:auto;}
+  .ev-empty{padding:40px 20px;text-align:center;color:var(--text-dimmer);font-size:13px;}
+
+  #tooltip{position:fixed;pointer-events:none;z-index:50;background:#fff;border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:6px;padding:8px 12px;font-size:12.5px;line-height:1.5;box-shadow:0 12px 30px rgba(27,32,39,0.14);opacity:0;transform:translateY(4px);transition:opacity .12s ease,transform .12s ease;max-width:320px;}
   #tooltip.show{opacity:1;transform:translateY(0);}
-  #tooltip .t-path{font-family:var(--font-body);font-weight:600;color:var(--text);}
-  #tooltip .t-path-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);margin-top:1px;word-break:break-all;}
+  #tooltip .t-path{font-weight:600;}
+  #tooltip .t-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-dimmer);margin-top:1px;word-break:break-all;}
   #tooltip .t-meta{color:var(--text-dim);margin-top:3px;}
   #tooltip .t-val{color:var(--cyan);font-family:var(--font-mono);}
 
-  footer{max-width:1680px;margin:26px auto 0;padding:0 24px;color:var(--text-dimmer);font-size:12px;line-height:1.7;}
-  footer strong{color:var(--text-dim);}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
+  .swatch{width:7px;height:7px;border-radius:2px;display:inline-block;}
+
+  footer{max-width:1680px;margin:22px auto 0;padding:0 24px;color:var(--text-dimmer);font-size:12px;line-height:1.7;}
   footer p{margin:0 0 8px;}
-  footer details{margin-top:2px;}
-  footer summary{cursor:pointer;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;letter-spacing:.02em;list-style:none;}
+  footer summary{cursor:pointer;color:var(--text-dim);font-family:var(--font-mono);font-size:11px;list-style:none;}
   footer summary::-webkit-details-marker{display:none;}
   footer summary::before{content:"+ ";color:var(--cyan);}
   footer details[open] summary::before{content:"– ";}
-  footer details p{margin-top:8px;}
 
-  @media (max-width:640px){
-    h1{font-size:22px;}
-    .stat{padding:10px 14px;}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:2px;}
+
+  @media (max-width:900px){
+    .split{flex-direction:column;}
+    .picker{position:static;width:100%;flex:none;max-height:230px;border-right:none;border-bottom:1px solid var(--line);}
+    .board-grid{grid-template-columns:1fr;}
+    .barcell{display:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;scroll-behavior:auto !important;}
   }
 </style>
 </head>
@@ -141,93 +206,142 @@
   <header>
     <div class="period-row">
       <p class="data-status" id="dataStatus">Loading…</p>
-      <div class="period-toggle" role="group" aria-label="Reporting period">
+      <div class="seg" role="group" aria-label="Reporting period">
         <button class="period-btn" data-mode="month" data-value="0" type="button">This month</button>
         <button class="period-btn" data-mode="month" data-value="1" type="button">Last month</button>
         <button class="period-btn" data-mode="range" data-value="6" type="button">Last 6 months</button>
       </div>
-      <div class="view-toggle" role="group" aria-label="Chart view">
+      <div class="seg view-toggle" role="group" aria-label="View">
         <button class="view-btn" data-view="pathway" type="button">Pathway</button>
         <button class="view-btn" data-view="events" type="button">Events</button>
       </div>
     </div>
+    <div class="stats" id="stats"></div>
     <div class="legend" id="legend">
-      <span class="legend-item"><span class="swatch" style="background:var(--root)"></span>Homepage</span>
-      <span class="legend-item"><span class="swatch" style="background:var(--amber)"></span>Programs, resources &amp; WeCollab</span>
-      <span class="legend-item"><span class="swatch" style="background:var(--cyan)"></span>Company &amp; events</span>
-      <span class="legend-item"><span class="swatch" style="background:var(--rust)"></span>Free trial &amp; store</span>
-      <span class="legend-item"><span class="swatch" style="background:var(--slate)"></span>Other pages</span>
+      <span class="legend-item"><span class="swatch" style="background:#E3A857"></span>Programs, resources &amp; WeCollab</span>
+      <span class="legend-item"><span class="swatch" style="background:#4EC0C9"></span>Company &amp; events</span>
+      <span class="legend-item"><span class="swatch" style="background:#D9694F"></span>Free trial &amp; store</span>
+      <span class="legend-item"><span class="swatch" style="background:#6E7580"></span>Other pages</span>
     </div>
   </header>
 
-  <div class="panel">
+  <!-- ============ PATHWAY VIEW ============ -->
+  <div class="panel" id="pathwayPanel">
     <div class="panel-head">
-      <h2 id="panelTitle">Where visitors go, step by step</h2>
-      <span class="hint" id="panelHint">thicker line = more visits · hover a page for details · drag to pan around</span>
+      <h2>Where sessions go from the homepage</h2>
+      <span class="hint" id="pathwayHint">tick a page to open its own chart · click a next step to go deeper</span>
     </div>
-    <div class="panel-body">
-      <nav class="side-nav" id="sideNav" aria-label="Jump to entry page">
-        <h3>Jump to a page</h3>
-        <div class="side-nav-list" id="sideNavList"></div>
+    <div class="split">
+      <nav class="picker" id="picker" aria-label="Choose pages to chart">
+        <h3>Pages to chart</h3>
+        <p class="note">Each page you tick gets its own small chart on the right.</p>
+        <input class="picker-search" id="pickerSearch" type="search" placeholder="Find a page…" aria-label="Find a page">
+        <div class="picker-actions">
+          <button class="mini-btn" id="pickTop" type="button">Top 5</button>
+          <button class="mini-btn" id="pickClear" type="button">Clear</button>
+        </div>
+        <div id="pickerList"></div>
       </nav>
-      <div class="chart-scroll">
-        <div class="col-sticky" id="colSticky"></div>
-        <svg id="chart"></svg>
+      <div class="boards">
+        <div id="boardGrid" class="board-grid"></div>
       </div>
     </div>
   </div>
 
+  <!-- ============ EVENTS VIEW ============ -->
+  <div class="panel" id="eventsPanel" style="display:none;">
+    <div class="panel-head">
+      <h2>What happened, and where in the journey</h2>
+      <span class="hint">click a page to see its events · automatic page views and scrolls are left out</span>
+    </div>
+    <div class="ev-tools">
+      <input type="search" id="evSearch" placeholder="Find a page or event…" aria-label="Find a page or event">
+      <div class="seg" role="group" aria-label="Event filter">
+        <button id="evAll" class="active" type="button">All events</button>
+        <button id="evKey" type="button">Key events only</button>
+      </div>
+    </div>
+    <div class="chips" id="evChips"></div>
+    <div class="table-scroll" id="evTableWrap"></div>
+  </div>
+
   <footer>
-    <p id="footerMain">Each line is visitors moving from one page to the next; a thicker line means more visitors took that path. Page names marked <span class="link-glyph" style="font-family:var(--font-mono)">↗</span> open the real, live page in a new tab.</p>
+    <p id="footerMain">Counts are sessions — one visit by one person, however many pages they open in it. A page marked ↗ opens the live page in a new tab.</p>
     <details>
       <summary>Notes on how this was put together</summary>
-      <p>Rebuilt from a multi-part analytics export. Flow width uses a square-root scale so smaller paths stay visible next to the biggest ones — the exact visit count is always in the tooltip. Every branch traces automatically as far as its own traffic supports (not fixed to any set number of pages); to keep each section easy to scan, only a branch's top pages are shown individually, with smaller paths grouped into "Other pages" — the same rollup idea the analytics tool itself uses for its own long tail. "Other pages" isn't linked, since it's a rollup rather than one single page.</p>
+      <p>Journeys are traced from the homepage outward: for each page, the report asks Google Analytics which pages sessions opened next. Every branch traces as far as its own traffic supports. Smaller paths are grouped into "Other pages" so no single chart becomes a wall of tiny entries — the same rollup Google Analytics uses for its own long tail. "Other pages" is a group rather than one page, so it isn't linked or clickable.</p>
     </details>
   </footer>
 </div>
 
 <div id="tooltip"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script>
-/* ---------------------------------------------------------
-   1. DATA
-   This is the fallback shown if a live feed isn't configured
-   (or is unreachable) — see LIVE_DATA_URL and loadPeriod()
-   near the bottom of this script. Everything below builds the
-   same chart from whichever tree it's handed.
---------------------------------------------------------- */
+/* =========================================================
+   1. FALLBACK DATA — shown when the live feed isn't reachable.
+   Same shape the Apps Script returns.
+========================================================= */
 const FALLBACK_TREE = {
   name: "/", value: 950,
   children: [
     { name: "/collaborative-response-1", value: 52, children: [
-      { name: "/collaborative-response/overview", value: 14 },
-      { name: "/collaborative-response-1/how-we-support", value: 10 },
+      { name: "/collaborative-response/overview", value: 14, children: [
+        { name: "/getting-started-collaborative-response", value: 5 },
+        { name: "/collaborative-response-1/partner-successes", value: 3 },
+        { name: "Others", value: 6 },
+      ]},
+      { name: "/collaborative-response-1/how-we-support", value: 10, children: [
+        { name: "/collaborative-response-1/how-we-support/contracted-services", value: 4 },
+        { name: "/collaborative-response-1/how-we-support/collaborative-response-across-system", value: 3 },
+        { name: "Others", value: 3 },
+      ]},
       { name: "/getting-started-collaborative-response", value: 8 },
       { name: "/collaborative-response-1/partner-successes", value: 6 },
       { name: "/collaborative-response-1/how-we-support/contracted-services", value: 4 },
-      { name: "/collaborative-response-1/how-we-support/collaborative-response-across-system", value: 3 },
-      { name: "Others", value: 7 },
+      { name: "Others", value: 10 },
     ]},
     { name: "/wecollab", value: 38, children: [
-      { name: "/wecollab/features", value: 12 },
-      { name: "/wecollab/pricing", value: 8 },
+      { name: "/wecollab/features", value: 12, children: [
+        { name: "/wecollab/features/classrooms", value: 5 },
+        { name: "/wecollab/features/schools", value: 3 },
+        { name: "Others", value: 4 },
+      ]},
+      { name: "/wecollab/pricing", value: 8, children: [
+        { name: "/wecollab/FREE-trial", value: 4 },
+        { name: "Others", value: 4 },
+      ]},
       { name: "/wecollab/FREE-trial", value: 7 },
       { name: "/wecollab/features/classrooms", value: 5 },
       { name: "/wecollab/ongoing-support", value: 3 },
       { name: "Others", value: 3 },
     ]},
     { name: "/resources-and-samples", value: 34, children: [
-      { name: "/resources-and-samples/collaborative-structures", value: 9 },
+      { name: "/resources-and-samples/collaborative-structures", value: 9, children: [
+        { name: "/resources-and-samples/collaborative-structures/collaborative-team-meetings", value: 4 },
+        { name: "Others", value: 5 },
+      ]},
       { name: "/resources-and-samples/general-resources", value: 8 },
       { name: "/resources-and-samples/collaborative-leaders-toolkit", value: 6 },
       { name: "/resources-and-samples/data-and-evidence", value: 4 },
       { name: "/resources-and-samples/continuum-supports", value: 3 },
-      { name: "/", value: 2 },
-      { name: "Others", value: 2 },
+      { name: "Others", value: 4 },
     ]},
-    { name: "/publications", value: 28 },
-    { name: "/who-we-are", value: 24 },
-    { name: "/events", value: 21 },
+    { name: "/publications", value: 28, children: [
+      { name: "/publications/blog-posts", value: 9 },
+      { name: "/publications/courses", value: 7 },
+      { name: "/publications/membership", value: 4 },
+      { name: "Others", value: 8 },
+    ]},
+    { name: "/who-we-are", value: 24, children: [
+      { name: "/who-we-are/our-team", value: 7 },
+      { name: "/who-we-are/testimonials", value: 6 },
+      { name: "Others", value: 11 },
+    ]},
+    { name: "/events", value: 21, children: [
+      { name: "/events/retreat", value: 6 },
+      { name: "Others", value: 15 },
+    ]},
     { name: "/free", value: 19 },
     { name: "/store", value: 14 },
     { name: "/speaking", value: 9 },
@@ -243,129 +357,33 @@ const FALLBACK_TREE = {
   ]
 };
 
-// Illustrative only, like FALLBACK_TREE above — shown in the Events
-// view when there's no live connection.
 const FALLBACK_EVENTS_BY_PAGE = [
-  { page: "/wecollab/pricing", event: "generate_lead", count: 6, keyEvent: true },
-  { page: "/wecollab", event: "click", count: 14, keyEvent: false },
-  { page: "/wecollab/FREE-trial", event: "sign_up", count: 4, keyEvent: true },
-  { page: "/collaborative-response-1", event: "click", count: 9, keyEvent: false },
-  { page: "/collaborative-response-1", event: "view_search_results", count: 2, keyEvent: false },
-  { page: "/free", event: "file_download", count: 7, keyEvent: false },
-  { page: "/resources-and-samples", event: "click", count: 5, keyEvent: false },
-  { page: "/publications/courses", event: "generate_lead", count: 1, keyEvent: true },
+  { page: "/wecollab", event: "click", count: 14, sessions: 11, keyEvent: false },
+  { page: "/wecollab", event: "scroll_depth_75", count: 6, sessions: 5, keyEvent: false },
+  { page: "/collaborative-response-1", event: "click", count: 9, sessions: 7, keyEvent: false },
+  { page: "/collaborative-response-1", event: "view_search_results", count: 2, sessions: 2, keyEvent: false },
+  { page: "/free", event: "file_download", count: 7, sessions: 6, keyEvent: false },
+  { page: "/wecollab/pricing", event: "generate_lead", count: 6, sessions: 6, keyEvent: true },
+  { page: "/resources-and-samples", event: "click", count: 5, sessions: 4, keyEvent: false },
+  { page: "/wecollab/FREE-trial", event: "sign_up", count: 4, sessions: 4, keyEvent: true },
+  { page: "/publications/courses", event: "generate_lead", count: 1, sessions: 1, keyEvent: true },
 ];
 
-/* ---------------------------------------------------------
-   Everything below builds and wires up the chart from a tree
-   object shaped like FALLBACK_TREE above. It's wrapped in one
-   function so it can be re-run whenever the period toggle picks
-   a different month — see loadPeriod() at the very end.
---------------------------------------------------------- */
-/* ---------------------------------------------------------
-   Shared tooltip — used by both the Pathway chart and the
-   Events chart, so it only needs to exist once.
---------------------------------------------------------- */
-const tooltip = document.getElementById('tooltip');
-function showTip(html, evt){
-  tooltip.innerHTML = html;
-  tooltip.classList.add('show');
-  moveTip(evt);
-}
-function moveTip(evt){
-  const pad = 16;
-  let x = evt.clientX + pad, y = evt.clientY + pad;
-  if (x + 320 > window.innerWidth) x = evt.clientX - 320 - pad;
-  if (y + 90 > window.innerHeight) y = evt.clientY - 90 - pad;
-  tooltip.style.left = x + 'px';
-  tooltip.style.top = y + 'px';
-}
-function hideTip(){ tooltip.classList.remove('show'); }
+// Sessions that included each page at all — the denominator the Events
+// table reads event counts against.
+const FALLBACK_PAGE_SESSIONS = {
+  "/wecollab": 38, "/collaborative-response-1": 52, "/free": 19,
+  "/wecollab/pricing": 14, "/resources-and-samples": 34,
+  "/wecollab/FREE-trial": 11, "/publications/courses": 11,
+};
 
-/* ---------------------------------------------------------
-   CLICK-AND-DRAG PANNING — set up once, works for whichever
-   view (Pathway or Events) currently occupies the chart, since
-   it only cares about the .chart-scroll container itself, not
-   what's inside it. A Figma-style hand tool: click, hold, drag
-   anywhere to pan (moves both the horizontal scroller and the
-   page's vertical scroll together). Mouse only — touch devices
-   keep their native scroll gestures. A small movement threshold
-   means an ordinary click (e.g. to open a linked page) still
-   works normally.
---------------------------------------------------------- */
-(function enablePanning(){
-  const scrollEl = document.querySelector('.chart-scroll');
-  const THRESHOLD = 6;
-  let isDown = false, dragged = false, suppressClick = false;
-  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
-  let pendingDx = 0, pendingDy = 0, rafId = null;
-
-  function applyPan(){
-    scrollEl.scrollLeft = startLeft - pendingDx;
-    window.scrollTo(window.scrollX, startTop - pendingDy);
-    rafId = null;
-  }
-
-  scrollEl.addEventListener('pointerdown', (evt) => {
-    if (evt.pointerType === 'touch' || evt.button !== 0) return;
-    isDown = true;
-    dragged = false;
-    startX = evt.clientX;
-    startY = evt.clientY;
-    startLeft = scrollEl.scrollLeft;
-    startTop = window.scrollY;
-    scrollEl.classList.add('grabbing');
-    document.body.classList.add('panning');
-  });
-
-  window.addEventListener('pointermove', (evt) => {
-    if (!isDown) return;
-    const dx = evt.clientX - startX;
-    const dy = evt.clientY - startY;
-    if (!dragged && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) dragged = true;
-    if (dragged){
-      pendingDx = dx; pendingDy = dy;
-      if (rafId === null) rafId = requestAnimationFrame(applyPan);
-    }
-  });
-
-  function endDrag(){
-    if (!isDown) return;
-    isDown = false;
-    scrollEl.classList.remove('grabbing');
-    document.body.classList.remove('panning');
-    if (dragged) suppressClick = true;
-  }
-  window.addEventListener('pointerup', endDrag);
-  window.addEventListener('pointercancel', endDrag);
-
-  // A drag that ends over a linked node still fires a native
-  // click — swallow it here so panning never accidentally
-  // opens a page.
-  scrollEl.addEventListener('click', (evt) => {
-    if (suppressClick){ evt.stopPropagation(); evt.preventDefault(); suppressClick = false; }
-  }, true);
-})();
-
-/* ---------------------------------------------------------
-   LIVE URL RESOLUTION — matched against the site's actual
-   navigation. Anything not recognized (rollups, "Other pages",
-   etc.) is left unlinked. Shared by both the Pathway and
-   Events views, since page nodes appear in both.
---------------------------------------------------------- */
+/* =========================================================
+   2. NAMING, COLOURS, SHARED HELPERS
+========================================================= */
 const SITE = "https://www.jigsawlearning.ca";
 const UNLINKABLE = new Set(["Others", "Other pages", "Other events"]);
-function urlFor(path){
-  if (UNLINKABLE.has(path)) return null;
-  return SITE + path;
-}
+function urlFor(path){ return UNLINKABLE.has(path) ? null : SITE + path; }
 
-/* ---------------------------------------------------------
-   PLAIN-ENGLISH LABELS — the chart is for a non-technical
-   client, so every node displays a friendly name instead of a
-   raw URL path. The path itself still drives the link and
-   shows on hover.
---------------------------------------------------------- */
 const LABELS = {
   "/": "Homepage",
   "Others": "Other pages",
@@ -425,470 +443,722 @@ function friendly(path){
   if (LABELS[path]) return LABELS[path];
   if (path === '/') return 'Homepage';
   if (path === 'Others') return 'Other pages';
-  // Not in the curated list (e.g. a page added to the site since) —
-  // turn the last URL segment into a readable title as a fallback.
-  const seg = path.replace(/\/$/, '').split('/').filter(Boolean).pop() || path;
+  const seg = String(path).replace(/\/$/, '').split('/').filter(Boolean).pop() || path;
   return seg.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 function humanizeEventName(name){
   return String(name).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-/* ---------------------------------------------------------
-   SIMPLIFY DEEP BRANCHES — folds a branch's long tail into
-   "Other pages" past MAX_CHILDREN_SHOWN, so no single section
-   turns into a wall of tiny entries. Raise the number to show
-   more detail per branch.
---------------------------------------------------------- */
-const MAX_CHILDREN_SHOWN = 6;
-function simplifyBranches(node){
-  if (!node.children) return;
-  node.children.forEach(simplifyBranches);
-  const real = node.children.filter(c => c.name !== 'Others');
-  const others = node.children.find(c => c.name === 'Others');
-  if (real.length > MAX_CHILDREN_SHOWN){
-    const sorted = [...real].sort((a, b) => b.value - a.value);
-    const kept = sorted.slice(0, MAX_CHILDREN_SHOWN);
-    const folded = sorted.slice(MAX_CHILDREN_SHOWN).reduce((s, c) => s + c.value, 0) + (others ? others.value : 0);
-    node.children = [...kept, { name: 'Others', value: folded }];
-  }
-}
-
-/* ---------------------------------------------------------
-   CATEGORY COLORS (semantic, not decorative) — shared by both
-   views, since page nodes are colored the same way wherever
-   they appear.
---------------------------------------------------------- */
 const COLORS = { home:'#B8C0CC', product:'#E3A857', company:'#4EC0C9', conversion:'#D9694F', other:'#6E7580' };
-const EVENT_COLOR = '#7C5CBF';
 const KEY_EVENT_COLOR = '#B8860B';
 const PRODUCT = ['/collaborative-response', '/getting-started-collaborative-response', '/wecollab', '/resources-and-samples', '/publications'];
 const COMPANY = ['/who-we-are', '/events', '/speaking'];
 const CONVERSION = ['/free', '/store'];
-
 function categorize(path){
   if (path === '/') return 'home';
-  if (path === 'Others') return 'other';
+  if (UNLINKABLE.has(path)) return 'other';
   if (PRODUCT.some(p => path.startsWith(p))) return 'product';
   if (COMPANY.some(p => path.startsWith(p))) return 'company';
   if (CONVERSION.some(p => path.startsWith(p))) return 'conversion';
   return 'other';
 }
+function colorFor(path){ return COLORS[categorize(path)]; }
+const fmt = n => Number(n || 0).toLocaleString();
 
-let activeCleanup = null; // torn down at the start of every render, pathway or events
+/* ---- tooltip ---- */
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){ tooltip.innerHTML = html; tooltip.classList.add('show'); moveTip(evt); }
+function moveTip(evt){
+  const pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + 300 > window.innerWidth) x = evt.clientX - 300 - pad;
+  if (y + 100 > window.innerHeight) y = evt.clientY - 100 - pad;
+  tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+}
+function hideTip(){ tooltip.classList.remove('show'); }
 
-function renderChart(tree){
-  // A previous call may still have window-level listeners attached
-  // (panning, scroll-tracking for the side-nav) — remove those before
-  // wiring up a new set, or switching periods would double them up.
-  if (typeof activeCleanup === 'function') activeCleanup();
-  const cleanupFns = [];
-  function onWindow(type, fn, opts){
-    window.addEventListener(type, fn, opts);
-    cleanupFns.push(function(){ window.removeEventListener(type, fn, opts); });
+/* ---- text measuring, so labels truncate to the real space available ---- */
+const _measure = document.createElement('canvas').getContext('2d');
+function fit(text, font, maxW){
+  _measure.font = font;
+  if (_measure.measureText(text).width <= maxW) return text;
+  let t = text;
+  while (t.length > 1 && _measure.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+  return t + '…';
+}
+
+/* =========================================================
+   3. STATE
+========================================================= */
+const MAX_ROWS = 6;                 // next steps shown per card before the rest fold into "Other pages"
+const state = {
+  tree: FALLBACK_TREE,
+  eventRows: FALLBACK_EVENTS_BY_PAGE,
+  eventsError: null,
+  periodLabel: '',
+  totalSessions: null,
+  pageSessions: null,
+  view: 'pathway',
+  selected: [],                     // entry-page paths, in the order they were ticked
+  drill: new Map(),                 // entry path -> array of deeper paths currently open
+  mode: new Map(),                  // entry path -> 'steps' | 'tree'
+  pickerFilter: '',
+  evSearch: '',
+  evKeyOnly: false,
+  evChip: null,                     // event name filter from the chips
+  evSort: { key: 'count', dir: -1 },
+  evOpen: new Set(),
+};
+
+// Real pages only. "Others" is a rollup of the long tail rather than a
+// page anyone can visit, so it can't have a chart of its own — its total
+// is reported under the picker instead.
+function entryPages(){
+  return (state.tree.children || [])
+    .filter(c => c.value > 0 && !UNLINKABLE.has(c.name))
+    .slice()
+    .sort((a, b) => b.value - a.value);
+}
+function otherPagesTotal(){
+  return (state.tree.children || [])
+    .filter(c => UNLINKABLE.has(c.name))
+    .reduce((s, c) => s + c.value, 0);
+}
+// Biggest first, but the "Other pages" rollup always sits last — it's a
+// leftover bucket, not a page competing for attention with the rest.
+function byValue(a, b){
+  const bucket = (UNLINKABLE.has(a.name) ? 1 : 0) - (UNLINKABLE.has(b.name) ? 1 : 0);
+  return bucket || (b.value - a.value);
+}
+function findChild(node, name){ return (node.children || []).find(c => c.name === name) || null; }
+function nodeAt(entryPath, drillArr){
+  let node = findChild(state.tree, entryPath);
+  for (const p of (drillArr || [])){
+    const next = node && findChild(node, p);
+    if (!next) break;
+    node = next;
   }
-  activeCleanup = function(){ cleanupFns.forEach(function(fn){ fn(); }); };
-
-  // Clear anything the previous render drew before building the new one.
-  d3.select('#chart').selectAll('*').remove();
-  document.getElementById('sideNavList').innerHTML = '';
-  document.getElementById('colSticky').innerHTML = '';
-  document.getElementById('sideNav').style.display = '';
-
-/* ---------------------------------------------------------
-   1d. SIMPLIFY THE DEEP BRANCHES
-   The three expanded sections originally listed 14–21
-   individual pages each — accurate, but a lot to take in at
-   a glance. This keeps each branch's top pages visible and
-   folds the long tail into "Other pages," the same rollup
-   idea the data already uses elsewhere. Raise the number to
-   show more detail, or remove the call below to see everything.
---------------------------------------------------------- */
-tree.children.forEach(simplifyBranches);
-
-/* ---------------------------------------------------------
-   3. FLATTEN TREE -> nodes / links (sqrt-scaled link value
-   for legible widths; true counts kept as `.count`)
---------------------------------------------------------- */
-const nodes = [];
-const links = [];
-let idc = 0;
-
-function addNode(t, parent){
-  const cat = categorize(t.name);
-  const node = { id: idc++, name: t.name, label: friendly(t.name), count: t.value, cat, color: COLORS[cat], url: t.name === '/' ? SITE + '/' : urlFor(t.name) };
-  nodes.push(node);
-  if (parent){
-    links.push({ source: parent.id, target: node.id, value: Math.sqrt(t.value), count: t.value });
-  }
-  (t.children || []).forEach(c => addNode(c, node));
   return node;
 }
-addNode(tree, null);
 
-/* ---------------------------------------------------------
-   4. LAYOUT
-   Width now depends on how deep this particular tree actually
-   goes — a period with only 3-page journeys stays compact; one
-   with 6-page journeys gets the room it needs automatically.
---------------------------------------------------------- */
-const MARGIN = { top: 30, right: 220, bottom: 30, left: 20 };
-const COLUMN_SPACING = 380; // horizontal room per column, tuned for typical label lengths
-
-// count nodes per depth (needs a first pass) to size height + width
-const depthCounts = {};
-function passDepth(t, depth){
-  depthCounts[depth] = (depthCounts[depth]||0) + 1;
-  (t.children||[]).forEach(c => passDepth(c, depth+1));
+/* Where each page sits in the journey, and the chain that leads to it.
+   Shallowest occurrence wins, so a page reached several ways is
+   described by its earliest appearance. */
+let chainIndex = new Map();
+function buildChainIndex(){
+  chainIndex = new Map();
+  const walk = (node, chain) => {
+    (node.children || []).forEach(c => {
+      if (UNLINKABLE.has(c.name)) return;
+      const next = chain.concat([c.name]);
+      const seen = chainIndex.get(c.name);
+      if (!seen || next.length < seen.length) chainIndex.set(c.name, next);
+      walk(c, next);
+    });
+  };
+  walk(state.tree, []);
 }
-passDepth(tree, 0);
-const maxCol = Math.max(...Object.values(depthCounts));
-const maxDepth = Math.max(...Object.keys(depthCounts).map(Number)); // 0 = root, so this is (columns - 1)
-const HEIGHT = Math.max(500, maxCol * 35 + 80);
-const WIDTH = MARGIN.left + MARGIN.right + COLUMN_SPACING * Math.max(maxDepth, 1);
-
-const svg = d3.select('#chart')
-  .attr('width', WIDTH)
-  .attr('height', HEIGHT)
-  .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`);
-
-const sankeyGen = d3.sankey()
-  .nodeId(d => d.id)
-  .nodeAlign(d3.sankeyLeft)
-  .nodeWidth(12)
-  .nodePadding(6)
-  .extent([[MARGIN.left, MARGIN.top], [WIDTH - MARGIN.right, HEIGHT - MARGIN.bottom]]);
-
-const graph = sankeyGen({
-  nodes: nodes.map(d => Object.assign({}, d)),
-  links: links.map(d => Object.assign({}, d)),
-});
-
-// safety clamp so nothing renders sub-pixel
-graph.nodes.forEach(n => { if (n.y1 - n.y0 < 2) { const m=(n.y0+n.y1)/2; n.y0=m-1; n.y1=m+1; } });
-graph.links.forEach(l => { if (l.width < 1.2) l.width = 1.2; });
-
-/* ---------------------------------------------------------
-   5. COLUMN HEADERS — rendered into the sticky bar above the
-   chart (see #colSticky) rather than inside the SVG, so they
-   stay visible no matter how far down the page you've scrolled.
-   Labels scale to however many columns this period actually has.
---------------------------------------------------------- */
-const byDepth = d3.group(graph.nodes, d => d.depth);
-function pathwayHeaderLabel(depth){
-  if (depth === 0) return 'Entry page';
-  if (depth === 1) return 'Next page';
-  return 'Page ' + (depth + 1);
-}
-const colSticky = document.getElementById('colSticky');
-colSticky.style.width = WIDTH + 'px';
-byDepth.forEach((list, depth) => {
-  const x = d3.min(list, d => d.x0);
-  const span = document.createElement('span');
-  span.style.left = x + 'px';
-  span.textContent = pathwayHeaderLabel(depth);
-  colSticky.appendChild(span);
-});
-
-/* ---------------------------------------------------------
-   6. LINKS
---------------------------------------------------------- */
-const linkGen = d3.sankeyLinkHorizontal();
-
-const linkSel = svg.append('g').attr('fill','none')
-  .selectAll('path')
-  .data(graph.links)
-  .join('path')
-  .attr('class','link-path')
-  .attr('d', linkGen)
-  .attr('stroke', d => d.target.color)
-  .attr('stroke-width', d => d.width)
-  .attr('stroke-opacity', 0.42);
-
-/* ---------------------------------------------------------
-   7. NODES
---------------------------------------------------------- */
-const nodeG = svg.append('g').selectAll('g')
-  .data(graph.nodes)
-  .join('g')
-  .style('cursor', d => d.url ? 'pointer' : 'grab');
-
-// A generous invisible hit area — covers the bar AND the label text
-// beside it, with a sensible minimum height — so clicking anywhere
-// near a page (not just precisely on its often-thin bar) opens it.
-nodeG.append('rect')
-  .attr('class', 'hit-rect')
-  .attr('x', d => d.x0)
-  .attr('y', d => Math.min(d.y0, (d.y0 + d.y1) / 2 - 12))
-  .attr('width', d => (d.x1 - d.x0) + 230)
-  .attr('height', d => Math.max(d.y1 - d.y0, 24))
-  .attr('fill', 'transparent');
-
-nodeG.append('rect')
-  .attr('class','node-rect')
-  .attr('x', d => d.x0)
-  .attr('y', d => d.y0)
-  .attr('width', d => d.x1 - d.x0)
-  .attr('height', d => d.y1 - d.y0)
-  .attr('rx', 2)
-  .attr('fill', d => d.color)
-  .attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
-
-nodeG.append('text')
-  .attr('class', d => 'lbl-name' + (d.depth >= 2 ? ' dim' : ''))
-  .attr('x', d => d.x1 + 7)
-  .attr('y', d => (d.y0 + d.y1) / 2 - (d.depth <= 1 ? 3 : 1) )
-  .attr('font-size', d => d.depth === 0 ? 14 : d.depth === 1 ? 12.5 : 11.5)
-  .attr('font-weight', d => d.depth === 0 ? 600 : 500)
-  .attr('dominant-baseline', 'middle')
-  .attr('pointer-events', 'none')
-  .text(d => d.depth === 0 ? 'All sessions' : d.label)
-  .filter(d => !!d.url)
-  .append('tspan')
-    .attr('class','link-glyph')
-    .attr('dx', 4)
-    .attr('font-size', '0.8em')
-    .text('↗');
-
-// The exact count stays visible for the root and entry-page columns
-// (the headline numbers) but is dropped from the busiest "Then"
-// column to keep that part of the chart calmer — it's always still
-// in the tooltip and, for entry pages, the side-nav.
-nodeG.filter(d => d.depth <= 1).append('text')
-  .attr('class','lbl-val')
-  .attr('x', d => d.x1 + 7)
-  .attr('y', d => (d.y0 + d.y1) / 2 + 11)
-  .attr('font-size', 10.5)
-  .attr('dominant-baseline', 'middle')
-  .attr('pointer-events', 'none')
-  .text(d => d.count.toLocaleString() + (d.depth === 0 ? ' sessions' : ''));
-
-/* ---------------------------------------------------------
-   8. INTERACTION
---------------------------------------------------------- */
-function dim(exceptLinks, exceptNodes){
-  linkSel.attr('stroke-opacity', d => exceptLinks.has(d) ? 0.85 : 0.06);
-  nodeG.selectAll('.node-rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
-}
-function resetDim(){
-  // If a page is "locked" (clicked from the side list), falling back
-  // here — e.g. after a mouse hover elsewhere ends — should restore
-  // that lock rather than clearing it early.
-  if (lockedLinks && lockedNodes){ dim(lockedLinks, lockedNodes); return; }
-  linkSel.attr('stroke-opacity', 0.42);
-  nodeG.selectAll('.node-rect').attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
+function stepLabel(path){
+  if (path === '/') return 'Homepage';
+  const chain = chainIndex.get(path);
+  if (!chain) return null;
+  return chain.length === 1 ? 'Page 2' : 'Page ' + (chain.length + 1);
 }
 
-// Walk backward from a node to the root, collecting every link on the way —
-// so hovering something two or three pages deep highlights the whole path
-// that led there, not just the last hop.
-function incomingLink(node){ return graph.links.find(l => l.target === node); }
-function ancestorChainLinks(node){
-  const chain = [];
-  let inc = incomingLink(node);
-  while (inc){ chain.push(inc); inc = incomingLink(inc.source); }
-  return chain;
-}
-function collectNodes(linkSet){
-  const ns = new Set();
-  linkSet.forEach(l => { ns.add(l.source); ns.add(l.target); });
-  return ns;
-}
-
-/* ---------------------------------------------------------
-   9b. HIGHLIGHT LOCK — clicking a page (from the side list or
-   the chart itself) isolates its path — itself, everything
-   before it, and its immediate next step — for 10 seconds,
-   then the diagram fades back to showing everything. Picking
-   another page while the countdown is running swaps to that
-   page's path instead and restarts the 10 seconds.
---------------------------------------------------------- */
-let lockedLinks = null, lockedNodes = null, lockTimer = null;
-
-function pathHighlightFor(d){
-  const ancestry = ancestorChainLinks(d);
-  const nextHop = graph.links.filter(l => l.source === d);
-  const highlightLinks = new Set([...ancestry, ...nextHop]);
-  const highlightNodes = collectNodes(highlightLinks);
-  highlightNodes.add(d);
-  return { highlightLinks, highlightNodes };
+/* =========================================================
+   4. HEADER STATS
+========================================================= */
+function renderStats(){
+  const el = document.getElementById('stats');
+  const root = state.tree.value || 0;
+  const onward = (state.tree.children || []).reduce((s, c) => s + c.value, 0);
+  const deepest = (function depth(node){
+    if (!node.children || !node.children.length) return 1;
+    return 1 + Math.max(...node.children.map(depth));
+  })(state.tree);
+  const stats = [
+    { n: fmt(root), l: 'sessions started on the homepage' },
+    { n: fmt(onward), l: 'went on to another page' },
+    { n: deepest + ' pages', l: 'longest journey traced' },
+  ];
+  if (state.totalSessions){
+    stats.push({ n: Math.round((root / state.totalSessions) * 100) + '%',
+                 l: 'of all ' + fmt(state.totalSessions) + ' site sessions' });
+  }
+  el.innerHTML = stats.map(s => `<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
 }
 
-function lockHighlight(d){
-  if (lockTimer) clearTimeout(lockTimer);
-  const { highlightLinks, highlightNodes } = pathHighlightFor(d);
-  lockedLinks = highlightLinks;
-  lockedNodes = highlightNodes;
-  dim(lockedLinks, lockedNodes);
-  lockTimer = setTimeout(() => {
-    lockedLinks = null; lockedNodes = null; lockTimer = null;
-    resetDim();
-  }, 10000);
-}
-
-nodeG.select('.hit-rect')
-  .on('mousemove', (evt,d) => moveTip(evt))
-  .on('click', (evt, d) => { lockHighlight(d); if (d.url) window.open(d.url, '_blank', 'noopener'); })
-  .on('mouseenter', (evt, d) => {
-    const ancestry = ancestorChainLinks(d);              // everything before it
-    const nextHop = graph.links.filter(l => l.source === d); // where it leads next
-    const highlightLinks = new Set([...ancestry, ...nextHop]);
-    const highlightNodes = collectNodes(highlightLinks);
-    highlightNodes.add(d);
-    dim(highlightLinks, highlightNodes);
-    const parentLink = ancestry[0];
-    const pct = parentLink ? ((d.count / parentLink.source.count) * 100).toFixed(1) + '% of ' + (parentLink.source.depth===0?'all sessions':parentLink.source.label) : null;
-    const linkLine = d.url
-      ? `<div class="t-meta" style="color:var(--cyan);margin-top:4px;">↗ click to open page</div>`
-      : d.name === 'Others'
-        ? `<div class="t-meta" style="margin-top:4px;">a group of smaller pages, not one single page</div>`
-        : `<div class="t-meta" style="margin-top:4px;">no longer a live page on the site</div>`;
-    const path = d.depth === 0 ? '' : `<div class="t-path-sub">${d.name}</div>`;
-    showTip(`<div class="t-path">${d.depth===0?'Homepage':d.label}</div>${path}<div class="t-meta"><span class="t-val">${d.count.toLocaleString()}</span> visits${pct?' · '+pct:''}</div>${linkLine}`, evt);
-  })
-  .on('mouseleave', () => { resetDim(); hideTip(); });
-
-linkSel
-  .on('mousemove', (evt,d) => moveTip(evt))
-  .on('mouseenter', (evt, d) => {
-    const ancestry = ancestorChainLinks(d.source);       // everything upstream of this ribbon
-    const highlightLinks = new Set([d, ...ancestry]);
-    const highlightNodes = collectNodes(highlightLinks);
-    dim(highlightLinks, highlightNodes);
-    const from = d.source.depth === 0 ? 'Homepage' : d.source.label;
-    showTip(`<div class="t-path">${from} → ${d.target.label}</div><div class="t-meta"><span class="t-val">${d.count.toLocaleString()}</span> visits</div>`, evt);
-  })
-  .on('mouseleave', () => { resetDim(); hideTip(); });
-
-/* ---------------------------------------------------------
-   9. LEFT SIDE-NAV — lists every entry page, stays pinned to
-   the top of the viewport (position: sticky) as you scroll
-   down through the tall diagram, so it's always reachable.
---------------------------------------------------------- */
-function absolutePageY(node){
-  const svgTop = document.getElementById('chart').getBoundingClientRect().top + window.scrollY;
-  return svgTop + (node.y0 + node.y1) / 2;
-}
-
-const sideNavList = document.getElementById('sideNavList');
-const level1Nodes = graph.nodes.filter(n => n.depth === 1);
-
-level1Nodes.forEach(n => {
-  const item = document.createElement('div');
-  item.className = 'side-nav-item';
-  item.dataset.id = n.id;
-  item.innerHTML = `<span class="dot" style="background:${n.color}"></span><span class="nm">${n.name === '/' ? 'All sessions' : n.label}</span><span class="c">${n.count.toLocaleString()}</span>`;
-  item.addEventListener('click', () => {
-    lockHighlight(n);
-    window.scrollTo({ top: absolutePageY(n) - Math.min(160, window.innerHeight * 0.3), behavior: 'smooth' });
+/* =========================================================
+   5. PATHWAY — page picker
+========================================================= */
+function renderPicker(){
+  const list = document.getElementById('pickerList');
+  const q = state.pickerFilter.trim().toLowerCase();
+  const rows = entryPages().filter(c => {
+    if (!q) return true;
+    return friendly(c.name).toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
   });
-  sideNavList.appendChild(item);
+  list.innerHTML = '';
+  if (!rows.length){
+    list.innerHTML = '<p class="picker-empty">No page matches that.</p>';
+    return;
+  }
+  const rollup = otherPagesTotal();
+  rows.forEach(c => {
+    const on = state.selected.includes(c.name);
+    const label = document.createElement('label');
+    label.className = 'pick' + (on ? ' on' : '');
+    label.innerHTML =
+      `<input type="checkbox" ${on ? 'checked' : ''}>` +
+      `<span class="dot" style="background:${colorFor(c.name)}"></span>` +
+      `<span class="nm" title="${c.name}">${friendly(c.name)}</span>` +
+      `<span class="c">${fmt(c.value)}</span>`;
+    label.querySelector('input').addEventListener('change', (e) => {
+      togglePage(c.name, e.target.checked);
+    });
+    list.appendChild(label);
+  });
+  if (rollup && !q){
+    const note = document.createElement('p');
+    note.className = 'picker-empty';
+    note.textContent = fmt(rollup) + ' more sessions went to pages too small to list on their own.';
+    list.appendChild(note);
+  }
+}
+
+function togglePage(path, on){
+  const i = state.selected.indexOf(path);
+  if (on && i === -1) state.selected.push(path);
+  if (!on && i !== -1){ state.selected.splice(i, 1); state.drill.delete(path); state.mode.delete(path); }
+  renderPicker();
+  renderBoards();
+}
+
+/* =========================================================
+   6. PATHWAY — one small chart per ticked page
+========================================================= */
+function renderBoards(){
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '';
+  if (!state.selected.length){
+    grid.classList.remove('board-grid');
+    const box = document.createElement('div');
+    box.className = 'empty-boards';
+    box.innerHTML = '<p>Nothing charted yet. Tick a page on the left and its chart appears here — tick more and they line up side by side.</p><button type="button">Chart the top 5 pages</button>';
+    box.querySelector('button').addEventListener('click', selectTop);
+    grid.appendChild(box);
+    return;
+  }
+  grid.classList.add('board-grid');
+  state.selected.forEach(path => {
+    const entry = findChild(state.tree, path);
+    if (entry) grid.appendChild(buildBoard(entry));
+  });
+  // Charts size themselves to their card, so they can only be drawn
+  // once the cards are actually in the page and have a real width.
+  requestAnimationFrame(() => state.selected.forEach(drawBoardChart));
+}
+
+function buildBoard(entry){
+  const path = entry.name;
+  const drill = state.drill.get(path) || [];
+  const current = nodeAt(path, drill);
+  const mode = state.mode.get(path) || 'steps';
+  const rootTotal = state.tree.value || 1;
+
+  const card = document.createElement('article');
+  card.className = 'board';
+  card.dataset.path = path;
+
+  const share = ((entry.value / rootTotal) * 100);
+  const url = urlFor(path);
+  const head = document.createElement('div');
+  head.className = 'board-head';
+  head.innerHTML =
+    `<span class="dot" style="background:${colorFor(path)}"></span>` +
+    `<span class="board-title"><span class="nm" title="${path}">${friendly(path)}</span>` +
+    `<span class="sub">${fmt(entry.value)} sessions · ${share.toFixed(1)}% of homepage sessions</span></span>` +
+    (url ? `<button class="icon-btn ext" type="button" title="Open ${path} in a new tab">↗</button>` : '') +
+    `<button class="icon-btn close" type="button" title="Remove this chart">✕</button>`;
+  if (url) head.querySelector('.ext').addEventListener('click', () => window.open(url, '_blank', 'noopener'));
+  head.querySelector('.close').addEventListener('click', () => togglePage(path, false));
+  card.appendChild(head);
+
+  // breadcrumb — the full path, one line, always visible
+  const crumbs = document.createElement('div');
+  crumbs.className = 'crumbs';
+  const parts = [{ label: 'Homepage', to: null }, { label: friendly(path), to: 0 }]
+    .concat(drill.map((p, i) => ({ label: friendly(p), to: i + 1 })));
+  parts.forEach((p, i) => {
+    if (i) crumbs.insertAdjacentHTML('beforeend', '<span class="sep">›</span>');
+    if (i === parts.length - 1 || p.to === null){
+      const span = document.createElement('span');
+      span.className = i === parts.length - 1 ? 'here' : '';
+      span.textContent = p.label;
+      crumbs.appendChild(span);
+    } else {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = p.label;
+      b.addEventListener('click', () => { state.drill.set(path, drill.slice(0, p.to)); renderBoards(); });
+      crumbs.appendChild(b);
+    }
+  });
+  card.appendChild(crumbs);
+
+  const body = document.createElement('div');
+  body.className = 'board-body';
+  card.appendChild(body);
+
+  const kids = (current && current.children) ? current.children.slice().sort(byValue) : [];
+
+  if (!kids.length){
+    body.innerHTML = `<div class="leaf-note">${fmt(current ? current.value : 0)} sessions reached this page and none went on to another page we can trace — it's the end of the journey.</div>`;
+    return card;
+  }
+
+  if (mode === 'tree'){
+    body.appendChild(buildTreeList(current));
+  } else {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'flow');
+    body.appendChild(svg);
+  }
+
+  const foot = document.createElement('div');
+  foot.className = 'board-foot';
+  const shown = Math.min(kids.length, MAX_ROWS);
+  foot.innerHTML = `<span>${kids.length} next ${kids.length === 1 ? 'step' : 'steps'}${kids.length > shown ? ` · showing top ${shown}` : ''}</span>`;
+  const btn = document.createElement('button');
+  btn.className = 'toggle'; btn.type = 'button';
+  btn.textContent = mode === 'tree' ? 'Show steps' : 'Show full path';
+  btn.addEventListener('click', () => { state.mode.set(path, mode === 'tree' ? 'steps' : 'tree'); renderBoards(); });
+  foot.appendChild(btn);
+  card.appendChild(foot);
+
+  return card;
+}
+
+/* ---- the flow drawing itself: one page on the left, its next steps
+       on the right, ribbon thickness = share of the sessions ---- */
+const ROW_H = 27;
+function drawBoardChart(path){
+  const card = document.querySelector(`.board[data-path="${CSS.escape(path)}"]`);
+  if (!card) return;
+  const svg = card.querySelector('svg.flow');
+  if (!svg) return;
+
+  const drill = state.drill.get(path) || [];
+  const current = nodeAt(path, drill);
+  let kids = (current.children || []).slice().sort(byValue);
+  if (kids.length > MAX_ROWS){
+    const keep = kids.filter(k => !UNLINKABLE.has(k.name)).slice(0, MAX_ROWS - 1);
+    const foldedVal = kids.filter(k => !keep.includes(k)).reduce((s, k) => s + k.value, 0);
+    kids = keep.concat([{ name: 'Others', value: foldedVal }]);
+  }
+
+  const W = Math.max(300, card.querySelector('.board-body').clientWidth);
+  const H = kids.length * ROW_H + 10;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.innerHTML = '';
+
+  const SPINE_X = 0, SPINE_W = 5;
+  const TARGET_X = Math.round(Math.min(120, Math.max(74, W * 0.24)));
+  const TARGET_W = 4;
+  const LABEL_X = TARGET_X + TARGET_W + 9;
+  const mid = (SPINE_X + SPINE_W + TARGET_X) / 2;
+  const spineTop = 5, spineBottom = H - 5, spineH = spineBottom - spineTop;
+  const sum = kids.reduce((s, k) => s + k.value, 0) || 1;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, text) => {
+    const n = document.createElementNS(ns, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+
+  // the page itself — one bar, height = all of its onward sessions
+  svg.appendChild(el('rect', { x: SPINE_X, y: spineTop, width: SPINE_W, height: spineH, rx: 2, fill: colorFor(path), 'fill-opacity': .9 }));
+
+  let cursor = spineTop;
+  kids.forEach((k, i) => {
+    const srcH = Math.max(1.5, (k.value / sum) * spineH);
+    const y0s = cursor, y1s = cursor + srcH;
+    cursor += srcH;
+
+    const rowTop = 5 + i * ROW_H;
+    const cy = rowTop + ROW_H / 2;
+    const tH = Math.max(3, Math.min(srcH, ROW_H - 9));
+    const y0t = cy - tH / 2, y1t = cy + tH / 2;
+    const color = colorFor(k.name);
+    const drillable = !!(k.children && k.children.length) && !UNLINKABLE.has(k.name);
+    const kUrl = urlFor(k.name);
+
+    const g = el('g', { class: 'row' + (drillable ? ' drillable' : '') });
+
+    g.appendChild(el('path', {
+      class: 'ribbon',
+      d: `M${SPINE_X + SPINE_W},${y0s} C${mid},${y0s} ${mid},${y0t} ${TARGET_X},${y0t} L${TARGET_X},${y1t} C${mid},${y1t} ${mid},${y1s} ${SPINE_X + SPINE_W},${y1s} Z`,
+      fill: color, 'fill-opacity': .32
+    }));
+    g.appendChild(el('rect', { x: TARGET_X, y: y0t, width: TARGET_W, height: tH, rx: 1.5, fill: color }));
+
+    const pct = ((k.value / (current.value || sum)) * 100);
+    const valText = fmt(k.value);
+    _measure.font = '400 10px "IBM Plex Mono", monospace';
+    const valW = _measure.measureText(valText).width;
+    const extW = kUrl ? 13 : 0;
+    const chevW = drillable ? 10 : 0;
+    const nameMax = Math.max(40, W - LABEL_X - valW - extW - chevW - 14);
+    const nameFont = '500 11.5px "IBM Plex Sans", sans-serif';
+
+    g.appendChild(el('text', { class: 'r-nm', x: LABEL_X, y: cy, 'dominant-baseline': 'middle' },
+      fit(friendly(k.name), nameFont, nameMax)));
+    if (drillable) g.appendChild(el('text', { class: 'r-chev', x: LABEL_X + _measure_width(fit(friendly(k.name), nameFont, nameMax), nameFont) + 5, y: cy, 'dominant-baseline': 'middle' }, '›'));
+    g.appendChild(el('text', { class: 'r-val', x: W - extW - 2, y: cy, 'dominant-baseline': 'middle', 'text-anchor': 'end' }, valText));
+    if (kUrl){
+      const a = el('text', { class: 'r-ext', x: W - 1, y: cy, 'dominant-baseline': 'middle', 'text-anchor': 'end' }, '↗');
+      a.addEventListener('click', (e) => { e.stopPropagation(); window.open(kUrl, '_blank', 'noopener'); });
+      a.appendChild(el('title', {}, 'Open ' + k.name));
+      g.appendChild(a);
+    }
+
+    const hit = el('rect', { class: 'row-hit', x: 0, y: rowTop, width: W, height: ROW_H });
+    hit.addEventListener('mousemove', (e) => moveTip(e));
+    hit.addEventListener('mouseenter', (e) => {
+      g.querySelector('.ribbon').setAttribute('fill-opacity', .62);
+      const next = drillable ? '<div class="t-meta" style="color:var(--cyan);margin-top:4px;">click to see where these sessions went next</div>'
+        : UNLINKABLE.has(k.name) ? '<div class="t-meta" style="margin-top:4px;">a group of smaller pages, not one single page</div>'
+        : '<div class="t-meta" style="margin-top:4px;">no onward pages traced from here</div>';
+      showTip(
+        `<div class="t-path">${friendly(k.name)}</div>` +
+        (UNLINKABLE.has(k.name) ? '' : `<div class="t-sub">${k.name}</div>`) +
+        `<div class="t-meta"><span class="t-val">${fmt(k.value)}</span> sessions · ${pct.toFixed(1)}% of ${friendly(current.name)}</div>` + next, e);
+    });
+    hit.addEventListener('mouseleave', () => { g.querySelector('.ribbon').setAttribute('fill-opacity', .32); hideTip(); });
+    if (drillable) hit.addEventListener('click', () => {
+      state.drill.set(path, (state.drill.get(path) || []).concat([k.name]));
+      hideTip();
+      renderBoards();
+    });
+    g.appendChild(hit);
+    svg.appendChild(g);
+  });
+}
+function _measure_width(text, font){ _measure.font = font; return _measure.measureText(text).width; }
+
+/* ---- "Show full path": the same branch as an indented list ---- */
+function buildTreeList(node){
+  const wrap = document.createElement('div');
+  wrap.className = 'tree';
+  const max = Math.max(...(node.children || [{ value: 1 }]).map(c => c.value), 1);
+  const add = (n, depth) => {
+    (n.children || []).slice().sort(byValue).slice(0, MAX_ROWS).forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'tree-row';
+      row.style.paddingLeft = (depth * 12) + 'px';
+      const w = Math.max(3, Math.round((c.value / max) * 42));
+      const url = urlFor(c.name);
+      row.innerHTML =
+        `<span class="bar" style="width:${w}px;background:${colorFor(c.name)}"></span>` +
+        `<span class="nm">${url ? `<a href="${url}" target="_blank" rel="noopener" title="${c.name}">${friendly(c.name)}</a>` : friendly(c.name)}</span>` +
+        `<span class="c">${fmt(c.value)}</span>`;
+      wrap.appendChild(row);
+      if (depth < 3) add(c, depth + 1);
+    });
+  };
+  add(node, 0);
+  return wrap;
+}
+
+function selectTop(){
+  state.selected = entryPages().slice(0, 5).map(c => c.name);
+  renderPicker();
+  renderBoards();
+}
+
+/* =========================================================
+   7. EVENTS — a table of what happened, and where
+========================================================= */
+// Sessions that included a page. Deliberately not a sum of its event
+// rows: one session firing two different events on a page would be
+// counted twice that way.
+function pageSessionsFor(page){
+  const map = state.pageSessions;
+  if (!map || map[page] === undefined || map[page] === null) return null;
+  return Number(map[page]);
+}
+
+function eventGroups(){
+  const byPage = new Map();
+  (state.eventRows || []).forEach(r => {
+    if (!byPage.has(r.page)) byPage.set(r.page, []);
+    byPage.get(r.page).push(r);
+  });
+  let groups = [...byPage.entries()].map(([page, evs]) => ({
+    page,
+    events: evs.slice().sort((a, b) => b.count - a.count),
+    count: evs.reduce((s, e) => s + e.count, 0),
+    sessions: pageSessionsFor(page),
+    hasSessions: pageSessionsFor(page) !== null || evs.some(e => e.sessions !== undefined && e.sessions !== null),
+    keyCount: evs.filter(e => e.keyEvent).reduce((s, e) => s + e.count, 0),
+  }));
+
+  const q = state.evSearch.trim().toLowerCase();
+  if (q || state.evKeyOnly || state.evChip){
+    groups = groups.map(g => {
+      const events = g.events.filter(e => {
+        if (state.evKeyOnly && !e.keyEvent) return false;
+        if (state.evChip && e.event !== state.evChip) return false;
+        if (!q) return true;
+        return friendly(g.page).toLowerCase().includes(q) || g.page.toLowerCase().includes(q) ||
+               humanizeEventName(e.event).toLowerCase().includes(q) || e.event.toLowerCase().includes(q);
+      });
+      return Object.assign({}, g, {
+        events,
+        count: events.reduce((s, e) => s + e.count, 0),
+      });
+    }).filter(g => g.events.length);
+  }
+
+  const { key, dir } = state.evSort;
+  groups.sort((a, b) => {
+    if (key === 'page') return dir * friendly(a.page).localeCompare(friendly(b.page));
+    if (key === 'step'){
+      const av = (chainIndex.get(a.page) || { length: 99 }).length;
+      const bv = (chainIndex.get(b.page) || { length: 99 }).length;
+      return dir * (av - bv);
+    }
+    if (key === 'sessions') return dir * (a.sessions - b.sessions);
+    return dir * (a.count - b.count);
+  });
+  return groups;
+}
+
+function renderEventChips(){
+  const wrap = document.getElementById('evChips');
+  const totals = new Map();
+  (state.eventRows || []).forEach(r => {
+    const t = totals.get(r.event) || { count: 0, keyEvent: false };
+    t.count += r.count; t.keyEvent = t.keyEvent || !!r.keyEvent;
+    totals.set(r.event, t);
+  });
+  const list = [...totals.entries()].sort((a, b) => b[1].count - a[1].count);
+  wrap.innerHTML = '';
+  wrap.style.display = list.length ? '' : 'none';
+  if (!list.length) return;
+  const all = document.createElement('button');
+  all.className = 'chip' + (state.evChip ? '' : ' on');
+  all.type = 'button';
+  all.textContent = 'All types';
+  all.addEventListener('click', () => { state.evChip = null; renderEvents(); });
+  wrap.appendChild(all);
+  list.forEach(([name, t]) => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (state.evChip === name ? ' on' : '');
+    c.type = 'button';
+    c.innerHTML = `${humanizeEventName(name)}${t.keyEvent ? ' <span class="k">★</span>' : ''} <span style="opacity:.7">${fmt(t.count)}</span>`;
+    c.addEventListener('click', () => { state.evChip = (state.evChip === name ? null : name); renderEvents(); });
+    wrap.appendChild(c);
+  });
+}
+
+function renderEvents(){
+  renderEventChips();
+  const wrap = document.getElementById('evTableWrap');
+  wrap.innerHTML = '';
+
+  if (state.eventsError){
+    wrap.innerHTML = `<div class="ev-empty">Events didn't load: ${state.eventsError}</div>`;
+    return;
+  }
+  const groups = eventGroups();
+  if (!groups.length){
+    wrap.innerHTML = `<div class="ev-empty">${(state.eventRows || []).length ? 'Nothing matches those filters.' : 'No events recorded for this period yet.'}</div>`;
+    return;
+  }
+
+  const maxCount = Math.max(...groups.map(g => g.count), 1);
+  const anySessions = groups.some(g => g.hasSessions);
+
+  const table = document.createElement('table');
+  table.className = 'ev';
+  const arrow = k => state.evSort.key === k ? `<span class="arrow">${state.evSort.dir === -1 ? '↓' : '↑'}</span>` : '';
+  table.innerHTML =
+    `<thead><tr>
+      <th data-sort="page">Page ${arrow('page')}</th>
+      <th data-sort="step">Step in journey ${arrow('step')}</th>
+      <th class="no-sort">Event</th>
+      ${anySessions ? `<th data-sort="sessions" style="text-align:right" title="Sessions that included this page">Sessions ${arrow('sessions')}</th>` : ''}
+      <th data-sort="count" style="text-align:right">Times ${arrow('count')}</th>
+      <th class="no-sort barcell"></th>
+      <th class="no-sort"></th>
+    </tr></thead><tbody></tbody>`;
+  table.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (state.evSort.key === k) state.evSort.dir *= -1;
+      else state.evSort = { key: k, dir: k === 'page' || k === 'step' ? 1 : -1 };
+      renderEvents();
+    });
+  });
+
+  const tbody = table.querySelector('tbody');
+  groups.forEach(g => {
+    const open = state.evOpen.has(g.page);
+    const step = stepLabel(g.page);
+    const url = urlFor(g.page);
+    const chain = chainIndex.get(g.page);
+
+    const tr = document.createElement('tr');
+    tr.className = 'page-row' + (open ? ' open' : '');
+    tr.tabIndex = 0;
+    tr.setAttribute('role', 'button');
+    tr.setAttribute('aria-expanded', open ? 'true' : 'false');
+    tr.innerHTML =
+      `<td><span class="pg"><span class="caret">▶</span><span class="dot" style="background:${colorFor(g.page)}"></span>` +
+        `<span><span class="nm">${friendly(g.page)}</span><br><span class="path">${g.page}</span></span></span></td>` +
+      `<td><span class="step${step ? '' : ' off'}">${step || 'Off the traced paths'}</span></td>` +
+      `<td>${g.events.length} event ${g.events.length === 1 ? 'type' : 'types'}${g.keyCount ? `<span class="key-tag">★ ${fmt(g.keyCount)} key</span>` : ''}</td>` +
+      (anySessions ? `<td class="num">${g.sessions === null ? '—' : fmt(g.sessions)}</td>` : '') +
+      `<td class="num">${fmt(g.count)}</td>` +
+      `<td class="barcell"><div class="track"><div class="fill" style="width:${Math.max(3, (g.count / maxCount) * 100)}%;background:${colorFor(g.page)}"></div></div></td>` +
+      `<td><span class="row-actions">${chain ? '<button type="button" class="see-path">See path</button>' : ''}${url ? `<a href="${url}" target="_blank" rel="noopener">Open ↗</a>` : ''}</span></td>`;
+    const toggle = () => {
+      if (open) state.evOpen.delete(g.page); else state.evOpen.add(g.page);
+      renderEvents();
+    };
+    tr.addEventListener('click', toggle);
+    tr.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+    });
+    const seePath = tr.querySelector('.see-path');
+    if (seePath) seePath.addEventListener('click', (e) => { e.stopPropagation(); focusChain(chain); });
+    tr.querySelectorAll('a').forEach(a => a.addEventListener('click', e => e.stopPropagation()));
+    tbody.appendChild(tr);
+
+    if (open){
+      g.events.forEach(ev => {
+        const r = document.createElement('tr');
+        r.className = 'ev-row';
+        r.innerHTML =
+          `<td></td><td></td>` +
+          `<td class="ev-name">${humanizeEventName(ev.event)}${ev.keyEvent ? '<span class="key-tag">★ Key event</span>' : ''}</td>` +
+          (anySessions ? `<td class="num">${ev.sessions === undefined || ev.sessions === null ? '—' : fmt(ev.sessions)}</td>` : '') +
+          `<td class="num">${fmt(ev.count)}</td>` +
+          `<td class="barcell"><div class="track"><div class="fill" style="width:${Math.max(3, (ev.count / maxCount) * 100)}%;background:${ev.keyEvent ? KEY_EVENT_COLOR : '#7C5CBF'}"></div></div></td>` +
+          `<td></td>`;
+        tbody.appendChild(r);
+      });
+    }
+  });
+
+  wrap.appendChild(table);
+}
+
+/* Jump from an events row back into the Pathway view, with that page's
+   own chart open and drilled to exactly where the page sits. */
+function focusChain(chain){
+  if (!chain || !chain.length) return;
+  const entry = chain[0];
+  if (!state.selected.includes(entry)) state.selected.push(entry);
+  state.drill.set(entry, chain.slice(1, -1));
+  state.mode.set(entry, 'steps');
+  setView('pathway');
+  requestAnimationFrame(() => {
+    const card = document.querySelector(`.board[data-path="${CSS.escape(entry)}"]`);
+    if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+}
+
+/* =========================================================
+   8. VIEW SWITCHING, PERIOD LOADING
+========================================================= */
+function setView(view){
+  state.view = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.getElementById('pathwayPanel').style.display = view === 'pathway' ? '' : 'none';
+  document.getElementById('eventsPanel').style.display = view === 'events' ? '' : 'none';
+  document.getElementById('legend').style.display = view === 'pathway' ? '' : 'none';
+  document.getElementById('footerMain').textContent = view === 'events'
+    ? 'Counts are sessions and the number of times each event fired. Gold ★ marks a Key Event — Google Analytics\' term for what used to be called a conversion. Automatic events (page views, scrolls, session starts) are left out so real actions stand out.'
+    : 'Counts are sessions — one visit by one person, however many pages they open in it. A page marked ↗ opens the live page in a new tab.';
+  renderCurrent();
+}
+function renderCurrent(){
+  if (state.view === 'pathway'){ renderPicker(); renderBoards(); }
+  else renderEvents();
+}
+
+document.querySelectorAll('.view-btn').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+document.getElementById('pickerSearch').addEventListener('input', e => { state.pickerFilter = e.target.value; renderPicker(); });
+document.getElementById('pickTop').addEventListener('click', selectTop);
+document.getElementById('pickClear').addEventListener('click', () => { state.selected = []; state.drill.clear(); state.mode.clear(); renderPicker(); renderBoards(); });
+document.getElementById('evSearch').addEventListener('input', e => { state.evSearch = e.target.value; renderEvents(); });
+document.getElementById('evAll').addEventListener('click', () => {
+  state.evKeyOnly = false;
+  document.getElementById('evAll').classList.add('active');
+  document.getElementById('evKey').classList.remove('active');
+  renderEvents();
+});
+document.getElementById('evKey').addEventListener('click', () => {
+  state.evKeyOnly = true;
+  document.getElementById('evKey').classList.add('active');
+  document.getElementById('evAll').classList.remove('active');
+  renderEvents();
 });
 
-const sideNavItems = sideNavList.querySelectorAll('.side-nav-item');
-function updateActiveSideNav(){
-  const probeY = window.scrollY + window.innerHeight * 0.35;
-  let closest = null, closestDist = Infinity;
-  level1Nodes.forEach(n => {
-    const dist = Math.abs(absolutePageY(n) - probeY);
-    if (dist < closestDist){ closestDist = dist; closest = n; }
-  });
-  sideNavItems.forEach(el => el.classList.toggle('active', closest && Number(el.dataset.id) === closest.id));
-}
-updateActiveSideNav();
-onWindow('scroll', updateActiveSideNav, { passive: true });
-onWindow('resize', updateActiveSideNav);
+// Cards size their chart to their own width, so a window resize needs a redraw.
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  if (state.view !== 'pathway') return;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => state.selected.forEach(drawBoardChart), 120);
+});
 
-} // end renderChart()
-
-/* ---------------------------------------------------------
-   11. LIVE DATA + PERIOD TOGGLE + VIEW SWITCHING
-   Paste the /exec URL from your deployed Apps Script web app
-   below. Leave it blank to always show the example data above.
-   On any failure (not deployed yet, wrong URL, GA4 unreachable,
-   property has no traffic that month, etc.) this quietly falls
-   back to the FALLBACK_* examples so the report never shows
-   broken/empty. The period buttons re-run this with either
-   ?months= (a single calendar month) or ?rangeMonths= (a
-   rolling window) — see the Apps Script's doGet(). Switching
-   between the Pathway and Events views never re-fetches — both
-   datasets come back in the same response, so flipping the
-   view toggle is instant.
---------------------------------------------------------- */
+/* ---- live feed ---- */
 const LIVE_DATA_URL = "https://script.google.com/macros/s/AKfycbxPK1sppCeKdKfi13Y9R6MSBQkfMAXi0Ht9NmRgXvuqxYl7IMTBg4-U38Qh1Ks9srwn/exec";
-
-let currentTreeData = FALLBACK_TREE;
-let currentEventsByPage = FALLBACK_EVENTS_BY_PAGE;
-let currentEventsByPageError = null;
-let currentPeriodLabel = '';
-let currentView = 'pathway'; // 'pathway' | 'events'
 
 function setDataStatus(text, ok){
   const el = document.getElementById('dataStatus');
-  if (!el) return;
   el.textContent = text;
   el.classList.toggle('is-live', ok === true);
   el.classList.toggle('is-fallback', ok === false);
 }
-
 function setActivePeriodButton(mode, value){
   document.querySelectorAll('.period-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode && Number(btn.dataset.value) === value);
   });
 }
 
-function setActiveViewButton(view){
-  document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.view === view);
-  });
+function applyData(tree, eventRows, eventsError, pageSessions){
+  state.pageSessions = pageSessions || null;
+  const firstLoad = !state.selected.length;
+  state.tree = tree;
+  state.eventRows = eventRows || [];
+  state.eventsError = eventsError || null;
+  buildChainIndex();
+  renderStats();
+  // Keep the user's ticked pages if they still exist in the new period;
+  // otherwise start them off with the busiest few.
+  const available = new Set(entryPages().map(c => c.name));
+  state.selected = state.selected.filter(p => available.has(p));
+  state.drill.clear();
+  if (firstLoad || !state.selected.length) state.selected = entryPages().slice(0, 3).map(c => c.name);
+  state.evOpen.clear();
+  renderCurrent();
 }
-
-function updatePanelCopy(view){
-  const title = document.getElementById('panelTitle');
-  const hint = document.getElementById('panelHint');
-  const legend = document.getElementById('legend');
-  const footer = document.getElementById('footerMain');
-  if (view === 'events'){
-    title.textContent = 'Events, and the pages that drove them';
-    hint.textContent = 'thicker line = more events · hover for details · drag to pan around';
-    legend.style.display = 'none';
-    footer.textContent = 'Each line connects a page to an event that happened there; a thicker line means it happened more often. Gold events are Key Events — GA4\'s term for what used to be called a "conversion." Routine automatic events (page views, scrolling, session starts) are left out here so the pages driving real actions stand out — the full raw list is still counted in the totals GA4 itself reports.';
-  } else {
-    title.textContent = 'Where visitors go, step by step';
-    hint.textContent = 'thicker line = more visits · hover a page for details · drag to pan around';
-    legend.style.display = '';
-    footer.textContent = 'Each line is visitors moving from one page to the next; a thicker line means more visitors took that path. Page names marked ↗ open the real, live page in a new tab.';
-  }
-}
-
-function renderCurrentView(){
-  updatePanelCopy(currentView);
-  if (currentView === 'events'){
-    renderEventsChart(currentEventsByPage, currentEventsByPageError);
-  } else {
-    renderChart(currentTreeData);
-  }
-}
-
-document.querySelectorAll('.view-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.dataset.view === currentView) return;
-    currentView = btn.dataset.view;
-    setActiveViewButton(currentView);
-    renderCurrentView();
-  });
-});
-setActiveViewButton(currentView);
 
 async function loadPeriod(mode, value){
   setActivePeriodButton(mode, value);
-
+  state.totalSessions = null;
   if (!LIVE_DATA_URL){
     setDataStatus('Showing example data — add your Apps Script URL to go live', false);
-    currentTreeData = FALLBACK_TREE;
-    currentEventsByPage = FALLBACK_EVENTS_BY_PAGE;
-    currentEventsByPageError = null;
-    renderCurrentView();
+    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS);
     return;
   }
   setDataStatus('Loading live data from Google Analytics…', null);
@@ -901,18 +1171,14 @@ async function loadPeriod(mode, value){
     if (!data || data.ok === false || !data.tree) throw new Error((data && data.error) || 'Malformed response');
     const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
-    currentTreeData = data.tree;
-    currentEventsByPage = data.eventsByPage || [];
-    currentEventsByPageError = data.eventsByPageError || null;
-    currentPeriodLabel = data.month || '';
-    renderCurrentView();
+    state.periodLabel = data.month || '';
+    state.totalSessions = data.totalSessions || null;
+    applyData(data.tree, data.eventsByPage || [], data.eventsByPageError || null, data.pageSessions);
   } catch (err){
     console.warn('Live GA4 feed unavailable, showing example data instead:', err);
     setDataStatus('Live feed unavailable right now — showing example data', false);
-    currentTreeData = FALLBACK_TREE;
-    currentEventsByPage = FALLBACK_EVENTS_BY_PAGE;
-    currentEventsByPageError = null;
-    renderCurrentView();
+    state.totalSessions = null;
+    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS);
   }
 }
 
@@ -920,239 +1186,8 @@ document.querySelectorAll('.period-btn').forEach(btn => {
   btn.addEventListener('click', () => loadPeriod(btn.dataset.mode, Number(btn.dataset.value)));
 });
 
-loadPeriod('month', 1); // last month, on first load — this month has little/no data right at the start of a new month
-
-/* ---------------------------------------------------------
-   12. EVENTS VIEW — a second, smaller sankey: Page → Event.
-   Reuses the same visual language as the Pathway chart (same
-   colors for pages, same node/link styling) so switching views
-   feels like the same tool, not a different one bolted on.
-   Pages keep their usual category color and stay clickable;
-   events are violet (gold if they're a Key Event) and aren't
-   linkable — an event isn't a page.
---------------------------------------------------------- */
-const EV_MAX_PAGES = 12;
-const EV_MAX_EVENTS_PER_PAGE = 6;
-
-function renderEventsChart(rows, queryError){
-  if (typeof activeCleanup === 'function') activeCleanup();
-  const cleanupFns = [];
-  function onWindow(type, fn, opts){
-    window.addEventListener(type, fn, opts);
-    cleanupFns.push(function(){ window.removeEventListener(type, fn, opts); });
-  }
-  activeCleanup = function(){ cleanupFns.forEach(function(fn){ fn(); }); };
-
-  d3.select('#chart').selectAll('*').remove();
-  document.getElementById('sideNavList').innerHTML = '';
-  document.getElementById('colSticky').innerHTML = '';
-  document.getElementById('colSticky').style.width = '0px';
-  document.getElementById('sideNav').style.display = 'none';
-  document.getElementById('chart').setAttribute('height', 0);
-  document.getElementById('chart').setAttribute('width', 0);
-  const existingEmpty = document.querySelector('.chart-empty');
-  if (existingEmpty) existingEmpty.remove();
-
-  if (queryError || !rows || !rows.length){
-    const empty = document.createElement('div');
-    empty.className = 'chart-empty';
-    empty.textContent = queryError ? ("Couldn't load events: " + queryError) : 'No event data for this period yet.';
-    document.querySelector('.chart-scroll').appendChild(empty);
-    cleanupFns.push(function(){ empty.remove(); });
-    return;
-  }
-
-  /* ---- group rows into a small tree: root -> page -> event ---- */
-  const byPage = new Map();
-  rows.forEach(r => {
-    if (!byPage.has(r.page)) byPage.set(r.page, []);
-    byPage.get(r.page).push(r);
-  });
-  let pageEntries = [...byPage.entries()]
-    .map(([page, evs]) => ({ page, total: evs.reduce((s,e) => s+e.count, 0), events: evs.slice().sort((a,b) => b.count-a.count) }))
-    .sort((a,b) => b.total - a.total);
-
-  let otherPagesTotal = 0;
-  if (pageEntries.length > EV_MAX_PAGES){
-    otherPagesTotal = pageEntries.slice(EV_MAX_PAGES).reduce((s,p) => s+p.total, 0);
-    pageEntries = pageEntries.slice(0, EV_MAX_PAGES);
-  }
-
-  const treeChildren = pageEntries.map(p => {
-    let evs = p.events;
-    let otherEventsTotal = 0;
-    if (evs.length > EV_MAX_EVENTS_PER_PAGE){
-      otherEventsTotal = evs.slice(EV_MAX_EVENTS_PER_PAGE).reduce((s,e) => s+e.count, 0);
-      evs = evs.slice(0, EV_MAX_EVENTS_PER_PAGE);
-    }
-    const children = evs.map(e => ({ name: e.event, value: e.count, keyEvent: e.keyEvent }));
-    if (otherEventsTotal > 0) children.push({ name: 'Other events', value: otherEventsTotal, isBucket: true });
-    return { name: p.page, value: p.total, children };
-  });
-  if (otherPagesTotal > 0) treeChildren.push({ name: 'Other pages', value: otherPagesTotal, isBucket: true });
-
-  const grandTotal = treeChildren.reduce((s,c) => s+c.value, 0);
-  const evTree = { name: 'events-root', value: grandTotal, children: treeChildren };
-
-  /* ---- flatten into nodes/links, mirroring the Pathway chart's approach ---- */
-  const evNodes = [];
-  const evLinks = [];
-  let evIdc = 0;
-  function addEvNode(t, parent, depth){
-    let color, url, label;
-    if (t.isBucket){
-      color = COLORS.other; url = null; label = t.name;
-    } else if (depth === 0){
-      color = EVENT_COLOR; url = null; label = 'All Events';
-    } else if (depth === 1){
-      color = COLORS[categorize(t.name)]; url = urlFor(t.name); label = friendly(t.name);
-    } else {
-      color = t.keyEvent ? KEY_EVENT_COLOR : EVENT_COLOR; url = null; label = humanizeEventName(t.name);
-    }
-    const node = { id: evIdc++, name: t.name, label, count: t.value, color, url, keyEvent: !!t.keyEvent };
-    evNodes.push(node);
-    if (parent) evLinks.push({ source: parent.id, target: node.id, value: Math.sqrt(t.value), count: t.value });
-    (t.children || []).forEach(c => addEvNode(c, node, depth + 1));
-    return node;
-  }
-  addEvNode(evTree, null, 0);
-
-  /* ---- layout (same proportions/margins as the Pathway chart) ---- */
-  const EV_MARGIN = { top: 30, right: 220, bottom: 30, left: 20 };
-  const EV_COLUMN_SPACING = 380;
-  const maxFanOut = Math.max(pageEntries.length, ...pageEntries.map(p => p.events.length + (p.events.length > EV_MAX_EVENTS_PER_PAGE ? 1 : 0)), 1);
-  const EV_HEIGHT = Math.max(400, maxFanOut * 35 + 80);
-  const EV_WIDTH = EV_MARGIN.left + EV_MARGIN.right + EV_COLUMN_SPACING * 2; // 3 fixed columns: root, page, event
-
-  const evSvg = d3.select('#chart')
-    .attr('width', EV_WIDTH)
-    .attr('height', EV_HEIGHT)
-    .attr('viewBox', `0 0 ${EV_WIDTH} ${EV_HEIGHT}`);
-  document.getElementById('chart').setAttribute('width', EV_WIDTH);
-  document.getElementById('chart').setAttribute('height', EV_HEIGHT);
-
-  const evSankeyGen = d3.sankey()
-    .nodeId(d => d.id)
-    .nodeAlign(d3.sankeyLeft)
-    .nodeWidth(12)
-    .nodePadding(6)
-    .extent([[EV_MARGIN.left, EV_MARGIN.top], [EV_WIDTH - EV_MARGIN.right, EV_HEIGHT - EV_MARGIN.bottom]]);
-
-  const evGraph = evSankeyGen({
-    nodes: evNodes.map(d => Object.assign({}, d)),
-    links: evLinks.map(d => Object.assign({}, d)),
-  });
-  evGraph.nodes.forEach(n => { if (n.y1 - n.y0 < 2) { const m=(n.y0+n.y1)/2; n.y0=m-1; n.y1=m+1; } });
-  evGraph.links.forEach(l => { if (l.width < 1.2) l.width = 1.2; });
-
-  /* ---- column headers ---- */
-  const evByDepth = d3.group(evGraph.nodes, d => d.depth);
-  const evHeaderLabels = ['All events', 'Page', 'Event'];
-  const evColSticky = document.getElementById('colSticky');
-  evColSticky.style.width = EV_WIDTH + 'px';
-  evByDepth.forEach((list, depth) => {
-    const x = d3.min(list, d => d.x0);
-    const span = document.createElement('span');
-    span.style.left = x + 'px';
-    span.textContent = evHeaderLabels[depth] || '';
-    evColSticky.appendChild(span);
-  });
-
-  /* ---- links ---- */
-  const evLinkGen = d3.sankeyLinkHorizontal();
-  const evLinkSel = evSvg.append('g').attr('fill','none')
-    .selectAll('path').data(evGraph.links).join('path')
-    .attr('class','link-path')
-    .attr('d', evLinkGen)
-    .attr('stroke', d => d.target.color)
-    .attr('stroke-width', d => d.width)
-    .attr('stroke-opacity', 0.42);
-
-  /* ---- nodes ---- */
-  const evNodeG = evSvg.append('g').selectAll('g')
-    .data(evGraph.nodes).join('g')
-    .style('cursor', d => d.url ? 'pointer' : 'default');
-
-  evNodeG.append('rect')
-    .attr('class', 'hit-rect')
-    .attr('x', d => d.x0)
-    .attr('y', d => Math.min(d.y0, (d.y0 + d.y1) / 2 - 12))
-    .attr('width', d => (d.x1 - d.x0) + 230)
-    .attr('height', d => Math.max(d.y1 - d.y0, 24))
-    .attr('fill', 'transparent');
-
-  evNodeG.append('rect')
-    .attr('class','node-rect')
-    .attr('x', d => d.x0).attr('y', d => d.y0)
-    .attr('width', d => d.x1 - d.x0).attr('height', d => d.y1 - d.y0)
-    .attr('rx', 2).attr('fill', d => d.color)
-    .attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
-
-  evNodeG.append('text')
-    .attr('class', d => 'lbl-name' + (d.depth >= 2 ? ' dim' : ''))
-    .attr('x', d => d.x1 + 7)
-    .attr('y', d => (d.y0 + d.y1) / 2 - (d.depth <= 1 ? 3 : 1))
-    .attr('font-size', d => d.depth === 0 ? 14 : d.depth === 1 ? 12.5 : 11.5)
-    .attr('font-weight', d => d.depth === 0 ? 600 : 500)
-    .attr('dominant-baseline', 'middle')
-    .attr('pointer-events', 'none')
-    .text(d => d.label)
-    .filter(d => !!d.url)
-    .append('tspan').attr('class','link-glyph').attr('dx', 4).attr('font-size', '0.8em').text('↗');
-
-  evNodeG.filter(d => d.depth <= 1).append('text')
-    .attr('class','lbl-val')
-    .attr('x', d => d.x1 + 7)
-    .attr('y', d => (d.y0 + d.y1) / 2 + 11)
-    .attr('font-size', 10.5)
-    .attr('dominant-baseline', 'middle')
-    .attr('pointer-events', 'none')
-    .text(d => d.count.toLocaleString());
-
-  // Small gold dot next to Key Events, since this view has no side-nav
-  // legend to explain the color the way the Pathway view's legend does.
-  evNodeG.filter(d => d.depth === 2 && d.keyEvent).append('text')
-    .attr('class', 'lbl-val')
-    .attr('x', d => d.x1 + 7)
-    .attr('y', d => (d.y0 + d.y1) / 2 + 11)
-    .attr('font-size', 9.5)
-    .attr('fill', KEY_EVENT_COLOR)
-    .attr('dominant-baseline', 'middle')
-    .attr('pointer-events', 'none')
-    .text('★ Key Event');
-
-  /* ---- interaction: simple hover-dim + tooltip + click-to-open ---- */
-  function evDim(exceptLinks, exceptNodes){
-    evLinkSel.attr('stroke-opacity', d => exceptLinks.has(d) ? 0.85 : 0.06);
-    evNodeG.selectAll('.node-rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
-  }
-  function evResetDim(){
-    evLinkSel.attr('stroke-opacity', 0.42);
-    evNodeG.selectAll('.node-rect').attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
-  }
-
-  evNodeG.select('.hit-rect')
-    .on('mousemove', (evt) => moveTip(evt))
-    .on('click', (evt, d) => { if (d.url) window.open(d.url, '_blank', 'noopener'); })
-    .on('mouseenter', (evt, d) => {
-      const touching = evGraph.links.filter(l => l.source === d || l.target === d);
-      const touchingNodes = new Set([d]);
-      touching.forEach(l => { touchingNodes.add(l.source); touchingNodes.add(l.target); });
-      evDim(new Set(touching), touchingNodes);
-      const kind = d.depth === 0 ? '' : d.depth === 1 ? '' : (d.keyEvent ? '<div class="t-meta" style="color:' + KEY_EVENT_COLOR + ';margin-top:4px;">★ Key Event</div>' : '');
-      const linkLine = d.url ? '<div class="t-meta" style="color:var(--cyan);margin-top:4px;">↗ click to open page</div>' : '';
-      showTip('<div class="t-path">' + d.label + '</div><div class="t-meta"><span class="t-val">' + d.count.toLocaleString() + '</span>' + (d.depth <= 1 ? ' visits with an event' : ' occurrences') + '</div>' + kind + linkLine, evt);
-    })
-    .on('mouseleave', () => { evResetDim(); hideTip(); });
-
-  evLinkSel
-    .on('mousemove', (evt) => moveTip(evt))
-    .on('mouseenter', (evt, d) => {
-      evDim(new Set([d]), new Set([d.source, d.target]));
-      showTip('<div class="t-path">' + d.source.label + ' → ' + d.target.label + '</div><div class="t-meta"><span class="t-val">' + d.count.toLocaleString() + '</span> occurrences</div>', evt);
-    })
-    .on('mouseleave', () => { evResetDim(); hideTip(); });
-}
+setView('pathway');
+loadPeriod('month', 1); // last month on first load — a new month has little data in its first days
 </script>
 </body>
 </html>
