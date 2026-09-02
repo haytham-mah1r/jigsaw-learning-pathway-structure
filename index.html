@@ -106,9 +106,9 @@
   svg#chart{display:block;}
   #chart .ribbon{transition:fill-opacity .12s ease;}
   #chart .node-hit{fill:transparent;}
-  #chart .n-nm{font-family:var(--font-body);font-size:11.5px;fill:var(--text);}
-  #chart .n-nm.root{font-size:13px;font-weight:600;}
-  #chart .n-val{font-family:var(--font-mono);font-size:10px;fill:var(--text-dimmer);}
+  #chart .n-nm{font-family:var(--font-body);font-size:12px;fill:var(--text);}
+  #chart .n-nm.root{font-size:14px;font-weight:600;}
+  #chart .n-val{font-family:var(--font-mono);font-size:10.5px;fill:var(--text-dimmer);}
   #chart .n-chev{font-family:var(--font-mono);font-size:9px;fill:var(--text-dimmer);}
   #chart .n-ext{font-family:var(--font-mono);font-size:10px;fill:var(--cyan);cursor:pointer;}
   #chart .n-nm, #chart .n-val, #chart .n-chev{pointer-events:none;}
@@ -679,7 +679,7 @@ function selectTop(n){
 /* =========================================================
    6. THE CHART — one diagram, a branch per ticked page
 ========================================================= */
-const ROW_H = 25;
+const ROW_H = 26;
 const PAD_T = 14;
 const BAR_W = 6;
 const BAR_MAX = 22;
@@ -741,12 +741,13 @@ function renderChart(){
 
   // Everything above is laid out in natural units; zoom only scales what
   // gets drawn, via the viewBox. Left to itself the chart grows to fill
-  // the width it has — a two- or three-column diagram would otherwise
-  // sit small in a lot of empty space — but never past 135%, and never
-  // shrinks on its own, since a wide tree is better panned than squinted
-  // at. The − and + buttons override that until Reset.
+  // the width it has, so a two- or three-column diagram uses the whole
+  // panel instead of sitting small in a band of empty space. It never
+  // shrinks on its own — a wide tree is better panned than squinted at —
+  // and stops at 180%, past which the type is larger than it is useful.
+  // The − and + buttons override all of this until Reset.
   const zoom = state.zoom === null
-    ? Math.max(1, Math.min(1.35, avail / W))
+    ? Math.max(1, Math.min(1.8, avail / W))
     : state.zoom;
   state.lastZoom = zoom;
   updateZoomLabel();
@@ -830,12 +831,12 @@ function renderChart(){
     const labelX = x + BAR_W + 8;
     const nameX = labelX + (canOpen ? 12 : 0);
     const valText = fmt(v.value) + (v.depth === 0 ? ' sessions' : '');
-    const valFont = '400 10px "IBM Plex Mono", monospace';
+    const valFont = '400 10.5px "IBM Plex Mono", monospace';
     const valW = textWidth(valText, valFont);
     const kUrl = urlFor(v.name);
     const extW = kUrl ? 14 : 0;
     const rightEdge = x + COL_W - 10;
-    const nameFont = v.depth === 0 ? '600 13px "IBM Plex Sans", sans-serif' : '500 11.5px "IBM Plex Sans", sans-serif';
+    const nameFont = v.depth === 0 ? '600 14px "IBM Plex Sans", sans-serif' : '500 12px "IBM Plex Sans", sans-serif';
     const nameMax = Math.max(46, rightEdge - nameX - valW - extW - 12);
 
     if (canOpen) g.appendChild(el('text', { class: 'n-chev', x: labelX, y: v.y, 'dominant-baseline': 'middle' }, open ? '▾' : '▸'));
@@ -900,7 +901,7 @@ function collapseFrom(key){
 /* ---------------------------------------------------------
    CHART SIZE — Reset hands sizing back to the chart itself.
 --------------------------------------------------------- */
-const ZOOM_MIN = 0.6, ZOOM_MAX = 2, ZOOM_STEP = 0.1;
+const ZOOM_MIN = 0.6, ZOOM_MAX = 2.5, ZOOM_STEP = 0.1;
 function updateZoomLabel(){
   const btn = document.getElementById('zoomFit');
   if (!btn) return;
