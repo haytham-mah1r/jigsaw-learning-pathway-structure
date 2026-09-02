@@ -82,9 +82,13 @@
   .picker-note{font-size:11px;color:var(--text-dimmer);padding:8px 0 0;line-height:1.45;}
 
   .chart-col{flex:1;min-width:0;}
-  .col-heads{position:relative;height:26px;border-bottom:1px solid var(--line-soft);}
+  .col-heads{position:relative;height:26px;border-bottom:1px solid var(--line-soft);overflow:hidden;}
+  .col-heads .inner{position:relative;height:100%;}
   .col-heads span{position:absolute;bottom:6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--text-dimmer);white-space:nowrap;}
-  .chart-scroll{overflow-x:auto;padding:0 14px 14px;}
+  .chart-scroll{overflow-x:auto;padding:0 14px 14px;cursor:-webkit-grab;cursor:grab;}
+  .chart-scroll.grabbing, .chart-scroll.grabbing *{cursor:-webkit-grabbing !important;cursor:grabbing !important;}
+  .chart-empty{cursor:auto;}
+  body.panning{user-select:none;}
   .chart-scroll::-webkit-scrollbar{height:9px;}
   .chart-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
   svg#chart{display:block;}
@@ -202,7 +206,7 @@
   <div class="panel" id="pathwayPanel">
     <div class="panel-head">
       <h2>Every session, and where it went</h2>
-      <span class="hint">tick a starting page to add its branch · click any page to open the next step</span>
+      <span class="hint">tick a starting page to add its branch · click any page to open the next step · drag the chart to move around</span>
     </div>
     <div class="split">
       <nav class="picker" id="picker" aria-label="Choose starting pages">
@@ -680,14 +684,19 @@ function renderChart(){
   svg.setAttribute('height', H);
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
-  // column headers
-  heads.style.width = W + 'px';
+  // Column headers live outside the scrolling area so they stay put
+  // vertically, and are slid sideways to match instead — see syncHeads.
+  const headsInner = document.createElement('div');
+  headsInner.className = 'inner';
+  headsInner.style.width = W + 'px';
   for (let d = 0; d < cols; d++){
     const span = document.createElement('span');
     span.style.left = (14 + d * COL_W) + 'px';
     span.textContent = d === 0 ? 'All sessions' : d === 1 ? 'Started on' : d === 2 ? 'Then went to' : 'Page ' + d;
-    heads.appendChild(span);
+    headsInner.appendChild(span);
   }
+  heads.appendChild(headsInner);
+  syncHeads();
 
   const ns = 'http://www.w3.org/2000/svg';
   const el = (tag, attrs, text) => {
@@ -816,6 +825,78 @@ function renderChart(){
 function collapseFrom(key){
   [...state.expanded].forEach(k => { if (k === key || k.indexOf(key + '\u0001') === 0) state.expanded.delete(k); });
 }
+
+/* Keeps the column headers lined up with however far the chart has
+   been scrolled or dragged sideways. */
+function syncHeads(){
+  const inner = document.querySelector('#colHeads .inner');
+  const scroll = document.getElementById('chartScroll');
+  if (inner && scroll) inner.style.transform = 'translateX(' + (-scroll.scrollLeft) + 'px)';
+}
+
+/* ---------------------------------------------------------
+   DRAG TO PAN — a hand tool for following a branch that runs
+   off the edge. Click and hold anywhere on the chart and drag:
+   sideways moves the chart's own scroller, up and down moves
+   the page with it, so a tall diagram and a wide one are both
+   reachable in one gesture.
+
+   Mouse only — touch devices keep their native scroll and
+   pinch gestures. A short movement threshold means an ordinary
+   click still opens a page or expands a step; only a real drag
+   swallows the click that follows it.
+--------------------------------------------------------- */
+(function enablePanning(){
+  const scrollEl = document.getElementById('chartScroll');
+  const THRESHOLD = 6;
+  let isDown = false, dragged = false, suppressClick = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  let pendingDx = 0, pendingDy = 0, rafId = null;
+
+  function applyPan(){
+    scrollEl.scrollLeft = startLeft - pendingDx;
+    window.scrollTo(window.scrollX, startTop - pendingDy);
+    rafId = null;
+  }
+
+  scrollEl.addEventListener('pointerdown', evt => {
+    if (evt.pointerType === 'touch' || evt.button !== 0) return;
+    isDown = true; dragged = false;
+    startX = evt.clientX; startY = evt.clientY;
+    startLeft = scrollEl.scrollLeft; startTop = window.scrollY;
+    scrollEl.classList.add('grabbing');
+    document.body.classList.add('panning');
+  });
+
+  window.addEventListener('pointermove', evt => {
+    if (!isDown) return;
+    const dx = evt.clientX - startX, dy = evt.clientY - startY;
+    if (!dragged && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)){ dragged = true; hideTip(); }
+    if (dragged){
+      pendingDx = dx; pendingDy = dy;
+      if (rafId === null) rafId = requestAnimationFrame(applyPan);
+    }
+  });
+
+  function endDrag(){
+    if (!isDown) return;
+    isDown = false;
+    scrollEl.classList.remove('grabbing');
+    document.body.classList.remove('panning');
+    if (dragged) suppressClick = true;
+  }
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+
+  // A drag that happens to end on a page still fires a native click —
+  // caught here, before it reaches the node, so panning never
+  // accidentally expands a step or opens a link.
+  scrollEl.addEventListener('click', evt => {
+    if (suppressClick){ evt.stopPropagation(); evt.preventDefault(); suppressClick = false; }
+  }, true);
+
+  scrollEl.addEventListener('scroll', syncHeads, { passive: true });
+})();
 
 /* =========================================================
    7. EVENTS TABLE
