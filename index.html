@@ -124,41 +124,60 @@
   /* ---------- events table ---------- */
   .ev-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line-soft);}
   .ev-tools input[type=search]{font-family:var(--font-body);font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;min-width:190px;}
-  .chips{display:flex;flex-wrap:wrap;gap:5px;padding:10px 18px 12px;border-bottom:1px solid var(--line-soft);}
-  .chip{font-family:var(--font-mono);font-size:10px;border:1px solid var(--line);border-radius:20px;padding:3px 9px;background:#fff;color:var(--text-dim);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
-  .chip:hover{background:var(--bg);}
-  .chip.on{background:var(--event);border-color:var(--event);color:#fff;}
-  .chip .k{color:var(--key-event);}
-  .chip.on .k{color:#F3E4B8;}
+  .mini-btn.on{background:var(--root);color:#fff;border-color:var(--root);}
+  .ev-main{flex:1;min-width:0;padding:0 0 14px;}
+  .ev-summary{margin:0;padding:12px 16px;font-size:12.5px;color:var(--text-dim);border-bottom:1px solid var(--line-soft);}
+  .ev-summary b{font-weight:600;color:var(--text);font-family:var(--font-mono);font-size:13px;}
+  .ev-summary .star{color:var(--key-event);}
+  .pick .star{color:var(--key-event);font-size:9px;flex:none;}
+  .picker-group{margin:14px 0 4px;font-family:var(--font-mono);font-size:9px;letter-spacing:.07em;color:var(--text-dimmer);}
+  .picker-group:first-child{margin-top:4px;}
 
   table.ev{width:100%;border-collapse:collapse;font-size:12.5px;}
-  table.ev th{text-align:left;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;color:var(--text-dimmer);font-weight:400;padding:8px 12px;border-bottom:1px solid var(--line);background:#FBFCFD;position:sticky;top:0;z-index:2;cursor:pointer;white-space:nowrap;}
-  table.ev th.no-sort{cursor:default;}
-  table.ev th .arrow{opacity:.5;}
-  table.ev td{padding:7px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
-  table.ev td.num{font-family:var(--font-mono);font-size:11px;text-align:right;white-space:nowrap;}
-  tr.page-row{cursor:pointer;background:#fff;}
-  tr.page-row:hover{background:#F4F6F8;}
-  tr.page-row td{border-bottom:1px solid var(--line);}
-  tr.page-row .pg{display:flex;align-items:center;gap:8px;min-width:0;}
-  tr.page-row .caret{font-size:9px;color:var(--text-dimmer);width:9px;flex:none;transition:transform .14s ease;display:inline-block;}
-  tr.page-row.open .caret{transform:rotate(90deg);}
-  tr.page-row .dot{width:8px;height:8px;border-radius:2px;flex:none;}
-  tr.page-row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  tr.page-row .path{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);}
-  tr.ev-row{background:#FCFDFE;}
-  tr.ev-row td{color:var(--text-dim);}
-  tr.ev-row .ev-name{padding-left:30px;position:relative;}
-  tr.ev-row .ev-name::before{content:"";position:absolute;left:14px;top:50%;width:8px;height:1px;background:var(--line);}
-  .step{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--text-dim);white-space:nowrap;background:#fff;}
-  .step.off{color:var(--text-dimmer);border-style:dashed;}
-  .key-tag{color:var(--key-event);font-family:var(--font-mono);font-size:9.5px;margin-left:6px;white-space:nowrap;}
-  .barcell{width:120px;}
-  .barcell .track{height:5px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
-  .barcell .fill{height:5px;border-radius:3px;}
-  .row-actions{display:flex;gap:4px;justify-content:flex-end;}
-  .row-actions button, .row-actions a{font-family:var(--font-mono);font-size:9.5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);padding:2px 7px;cursor:pointer;text-decoration:none;white-space:nowrap;}
-  .row-actions button:hover, .row-actions a:hover{background:var(--bg);color:var(--text);}
+  table.ev th{text-align:left;font-family:var(--font-mono);font-size:9px;letter-spacing:.07em;color:var(--text-dimmer);font-weight:400;
+    padding:9px 14px;border-bottom:1px solid var(--line);background:#FBFCFD;position:sticky;top:0;z-index:2;white-space:nowrap;}
+  table.ev th[data-sort]{cursor:pointer;}
+  table.ev th[data-sort]:hover{color:var(--text-dim);}
+  table.ev th .arrow{opacity:.55;margin-left:2px;}
+  table.ev td{padding:9px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+  table.ev td.num{font-family:var(--font-mono);font-size:11.5px;text-align:right;white-space:nowrap;color:var(--text-dim);}
+  table.ev td.num.lead{color:var(--text);}
+  table.ev td.key{font-family:var(--font-mono);font-size:11.5px;text-align:right;white-space:nowrap;color:var(--key-event);}
+  table.ev td.key .none{color:var(--line);}
+
+  tr.group-row{cursor:pointer;background:#fff;}
+  tr.group-row:hover{background:#F7F9FA;}
+  tr.group-row td{border-bottom:1px solid var(--line);}
+  tr.group-row.open td{border-bottom-color:var(--line-soft);}
+  tr.group-row .lead-cell{display:flex;align-items:center;gap:9px;min-width:0;}
+  tr.group-row .caret{font-size:8px;color:var(--text-dimmer);width:8px;flex:none;transition:transform .14s ease;display:inline-block;}
+  tr.group-row.open .caret{transform:rotate(90deg);}
+  tr.group-row .caret.empty{visibility:hidden;}
+  tr.group-row .dot{width:8px;height:8px;border-radius:2px;flex:none;}
+  tr.group-row .nm{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  tr.group-row .path{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  tr.group-row .sub{font-size:10.5px;color:var(--text-dimmer);display:block;}
+  .keystar{color:var(--key-event);font-size:10px;margin-left:5px;}
+
+  tr.child-row{background:#FCFDFE;}
+  tr.child-row td{color:var(--text-dim);border-bottom:1px solid var(--line-soft);}
+  tr.child-row .child-cell{padding-left:31px;position:relative;}
+  tr.child-row .child-cell::before{content:"";position:absolute;left:14px;top:50%;width:8px;height:1px;background:var(--line);}
+  tr.child-row .path{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dimmer);display:block;}
+
+  .step{font-size:11px;color:var(--text-dim);white-space:nowrap;}
+  .step.off{color:var(--line);font-family:var(--font-mono);}
+  .barcell{width:112px;}
+  .barcell .track{height:4px;background:var(--line-soft);border-radius:2px;overflow:hidden;}
+  .barcell .fill{height:4px;border-radius:2px;}
+  .ev-actions{display:flex;gap:4px;justify-content:flex-end;opacity:0;transition:opacity .12s ease;}
+  tr:hover .ev-actions, tr:focus-within .ev-actions{opacity:1;}
+  @media (hover:none){ .ev-actions{opacity:1;} }
+  .ev-actions button, .ev-actions a{font-size:10.5px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--text-dim);
+    padding:2px 8px;cursor:pointer;text-decoration:none;white-space:nowrap;font-family:var(--font-body);}
+  .ev-actions button:hover, .ev-actions a:hover{background:var(--bg);color:var(--text);}
+  .ev-empty{padding:44px 20px;text-align:center;color:var(--text-dimmer);font-size:13px;}
+  .ev-empty button{margin-top:10px;font-family:var(--font-body);font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;color:var(--text);}
   .table-scroll{max-height:72vh;overflow:auto;}
   .ev-empty{padding:40px 20px;text-align:center;color:var(--text-dimmer);font-size:13px;}
 
@@ -254,20 +273,33 @@
 
   <!-- ============ EVENTS ============ -->
   <div class="panel" id="eventsPanel" style="display:none;">
-    <div class="panel-head">
-      <h2>What happened, and where in the journey</h2>
-      <span class="hint">click a page to see its events · automatic page views and scrolls are left out</span>
-    </div>
     <div class="panel-wait" id="waitEvents" role="status" aria-live="polite"><span class="spinner"></span><span>Fetching this period from Google Analytics…</span></div>
-    <div class="ev-tools">
-      <input type="search" id="evSearch" placeholder="Find a page or event…" aria-label="Find a page or event">
-      <div class="seg" role="group" aria-label="Event filter">
-        <button id="evAll" class="active" type="button">All events</button>
-        <button id="evKey" type="button">Key events only</button>
+    <div class="panel-head">
+      <h2>What happened, and where</h2>
+      <div class="head-right">
+        <div class="seg" role="group" aria-label="Arrange rows">
+          <button id="evByPage" class="active" type="button">By page</button>
+          <button id="evByEvent" type="button">By event</button>
+        </div>
+        <span class="hint">click a row to open it · automatic page views and scrolls are left out</span>
       </div>
     </div>
-    <div class="chips" id="evChips"></div>
-    <div class="table-scroll" id="evTableWrap"></div>
+    <div class="split">
+      <nav class="picker" id="evFilters" aria-label="Filter events">
+        <h3>Narrow it down</h3>
+        <p class="note">Tick the events you care about. With none ticked you see everything.</p>
+        <input class="picker-search" id="evSearch" type="search" placeholder="Find an event or page…" aria-label="Find an event or page">
+        <div class="picker-actions">
+          <button class="mini-btn" id="evKeyBtn" type="button" title="Show only the events marked as Key Events in Google Analytics">Key events</button>
+          <button class="mini-btn" id="evClear" type="button">Clear</button>
+        </div>
+        <div id="evTypeList"></div>
+      </nav>
+      <div class="ev-main">
+        <p class="ev-summary" id="evSummary"></p>
+        <div class="table-scroll" id="evTableWrap"></div>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -518,7 +550,8 @@ const state = {
   pickerFilter: '',
   evSearch: '',
   evKeyOnly: false,
-  evChip: null,
+  evTypes: new Set(),       // ticked event names; empty means "everything"
+  evGroup: 'page',          // 'page' = events under each page, 'event' = pages under each event
   evSort: { key: 'count', dir: -1 },
   evOpen: new Set(),
 };
@@ -958,8 +991,11 @@ function syncHeads(){
 })();
 
 /* =========================================================
-   7. EVENTS TABLE
+   7. EVENTS — a filter rail and a table that can be read
+   either way round: which events a page produced, or which
+   pages produced an event.
 ========================================================= */
+
 // Sessions that included a page. Deliberately not a sum of its event
 // rows: one session firing two different events on a page would be
 // counted twice that way.
@@ -969,166 +1005,299 @@ function pageSessionsFor(page){
   return Number(map[page]);
 }
 
-function eventGroups(){
-  const byPage = new Map();
-  (state.eventRows || []).forEach(r => {
-    if (!byPage.has(r.page)) byPage.set(r.page, []);
-    byPage.get(r.page).push(r);
-  });
-  let groups = [...byPage.entries()].map(([page, evs]) => ({
-    page,
-    events: evs.slice().sort((a, b) => b.count - a.count),
-    count: evs.reduce((s, e) => s + e.count, 0),
-    sessions: pageSessionsFor(page),
-    keyCount: evs.filter(e => e.keyEvent).reduce((s, e) => s + e.count, 0),
-  }));
-
-  const q = state.evSearch.trim().toLowerCase();
-  if (q || state.evKeyOnly || state.evChip){
-    groups = groups.map(g => {
-      const events = g.events.filter(e => {
-        if (state.evKeyOnly && !e.keyEvent) return false;
-        if (state.evChip && e.event !== state.evChip) return false;
-        if (!q) return true;
-        return friendly(g.page).toLowerCase().includes(q) || g.page.toLowerCase().includes(q) ||
-               humanizeEventName(e.event).toLowerCase().includes(q) || e.event.toLowerCase().includes(q);
-      });
-      return Object.assign({}, g, { events, count: events.reduce((s, e) => s + e.count, 0) });
-    }).filter(g => g.events.length);
-  }
-
-  const { key, dir } = state.evSort;
-  groups.sort((a, b) => {
-    if (key === 'page') return dir * friendly(a.page).localeCompare(friendly(b.page));
-    if (key === 'step'){
-      const av = (chainIndex.get(a.page) || { length: 99 }).length;
-      const bv = (chainIndex.get(b.page) || { length: 99 }).length;
-      return dir * (av - bv);
-    }
-    if (key === 'sessions') return dir * ((a.sessions || 0) - (b.sessions || 0));
-    return dir * (a.count - b.count);
-  });
-  return groups;
+const ORDINALS = ['Entry page', '2nd page', '3rd page', '4th page', '5th page', '6th page'];
+function stepLabel(path){
+  const chain = chainIndex.get(path);
+  if (!chain) return null;
+  return ORDINALS[chain.length - 1] || (chain.length + 'th page');
+}
+function stepCell(path){
+  const step = stepLabel(path);
+  return step
+    ? `<span class="step">${step}</span>`
+    : `<span class="step off" title="This page isn't on any path traced from a starting page this period">—</span>`;
 }
 
-function renderEventChips(){
-  const wrap = document.getElementById('evChips');
+// Every row still standing after the search box, the Key events button
+// and whatever is ticked in the rail.
+function filteredRows(){
+  const q = state.evSearch.trim().toLowerCase();
+  return (state.eventRows || []).filter(r => {
+    if (state.evKeyOnly && !r.keyEvent) return false;
+    if (state.evTypes.size && !state.evTypes.has(r.event)) return false;
+    if (!q) return true;
+    return friendly(r.page).toLowerCase().includes(q) || r.page.toLowerCase().includes(q) ||
+           humanizeEventName(r.event).toLowerCase().includes(q) || r.event.toLowerCase().includes(q);
+  });
+}
+
+/* ---- the filter rail ---- */
+function renderEventFilters(){
+  document.getElementById('evKeyBtn').classList.toggle('on', state.evKeyOnly);
+
   const totals = new Map();
   (state.eventRows || []).forEach(r => {
-    const t = totals.get(r.event) || { count: 0, keyEvent: false };
-    t.count += r.count; t.keyEvent = t.keyEvent || !!r.keyEvent;
+    const t = totals.get(r.event) || { count: 0, keyEvent: false, pages: new Set() };
+    t.count += r.count; t.keyEvent = t.keyEvent || !!r.keyEvent; t.pages.add(r.page);
     totals.set(r.event, t);
   });
-  const list = [...totals.entries()].sort((a, b) => b[1].count - a[1].count);
+
+  const q = state.evSearch.trim().toLowerCase();
+  let list = [...totals.entries()]
+    .filter(([name, t]) => !state.evKeyOnly || t.keyEvent)
+    .filter(([name]) => !q || humanizeEventName(name).toLowerCase().includes(q) || name.toLowerCase().includes(q))
+    .sort((a, b) => (b[1].keyEvent - a[1].keyEvent) || (b[1].count - a[1].count));
+
+  const wrap = document.getElementById('evTypeList');
   wrap.innerHTML = '';
-  wrap.style.display = list.length ? '' : 'none';
-  if (!list.length) return;
-  const all = document.createElement('button');
-  all.className = 'chip' + (state.evChip ? '' : ' on');
-  all.type = 'button';
-  all.textContent = 'All types';
-  all.addEventListener('click', () => { state.evChip = null; renderEvents(); });
-  wrap.appendChild(all);
+  if (!list.length){
+    wrap.innerHTML = '<p class="picker-note">No event matches that.</p>';
+    return;
+  }
+
+  // Key events first under their own heading — they're what anyone
+  // scanning this is usually looking for.
+  let lastKey = null;
   list.forEach(([name, t]) => {
-    const c = document.createElement('button');
-    c.className = 'chip' + (state.evChip === name ? ' on' : '');
-    c.type = 'button';
-    c.innerHTML = `${humanizeEventName(name)}${t.keyEvent ? ' <span class="k">★</span>' : ''} <span style="opacity:.7">${fmt(t.count)}</span>`;
-    c.addEventListener('click', () => { state.evChip = (state.evChip === name ? null : name); renderEvents(); });
-    wrap.appendChild(c);
+    if (t.keyEvent !== lastKey){
+      lastKey = t.keyEvent;
+      const h = document.createElement('div');
+      h.className = 'picker-group';
+      h.textContent = t.keyEvent ? 'Key events' : 'Everything else';
+      wrap.appendChild(h);
+    }
+    const on = state.evTypes.has(name);
+    const label = document.createElement('label');
+    label.className = 'pick' + (on ? ' on' : '');
+    label.title = humanizeEventName(name) + ' — ' + fmt(t.count) + ' times across ' +
+      t.pages.size + (t.pages.size === 1 ? ' page' : ' pages');
+    label.innerHTML =
+      `<input type="checkbox" ${on ? 'checked' : ''}>` +
+      (t.keyEvent ? '<span class="star">★</span>' : '<span class="dot" style="background:#7C5CBF"></span>') +
+      `<span class="nm">${humanizeEventName(name)}</span>` +
+      `<span class="c">${fmt(t.count)}</span>`;
+    label.querySelector('input').addEventListener('change', e => {
+      if (e.target.checked) state.evTypes.add(name); else state.evTypes.delete(name);
+      renderEvents();
+    });
+    wrap.appendChild(label);
+  });
+}
+
+/* ---- grouping ---- */
+function groupByPage(rows){
+  const map = new Map();
+  rows.forEach(r => {
+    if (!map.has(r.page)) map.set(r.page, []);
+    map.get(r.page).push(r);
+  });
+  return [...map.entries()].map(([page, evs]) => ({
+    id: 'page:' + page,
+    page,
+    title: friendly(page),
+    path: page,
+    color: colorFor(page),
+    url: urlFor(page),
+    chain: chainIndex.get(page),
+    sessions: pageSessionsFor(page),
+    count: evs.reduce((s, e) => s + e.count, 0),
+    keyCount: evs.filter(e => e.keyEvent).reduce((s, e) => s + e.count, 0),
+    children: evs.slice().sort((a, b) => b.count - a.count),
+  }));
+}
+function groupByEvent(rows){
+  const map = new Map();
+  rows.forEach(r => {
+    if (!map.has(r.event)) map.set(r.event, []);
+    map.get(r.event).push(r);
+  });
+  return [...map.entries()].map(([event, pgs]) => ({
+    id: 'event:' + event,
+    event,
+    title: humanizeEventName(event),
+    keyEvent: pgs.some(p => p.keyEvent),
+    pages: pgs.length,
+    count: pgs.reduce((s, p) => s + p.count, 0),
+    keyCount: pgs.filter(p => p.keyEvent).reduce((s, p) => s + p.count, 0),
+    children: pgs.slice().sort((a, b) => b.count - a.count),
+  }));
+}
+
+function sortGroups(groups){
+  const { key, dir } = state.evSort;
+  const stepDepth = p => (chainIndex.get(p) || { length: 99 }).length;
+  return groups.sort((a, b) => {
+    if (key === 'name') return dir * a.title.localeCompare(b.title);
+    if (key === 'step') return dir * (stepDepth(a.page) - stepDepth(b.page));
+    if (key === 'sessions') return dir * ((a.sessions || 0) - (b.sessions || 0));
+    if (key === 'pages') return dir * (a.pages - b.pages);
+    if (key === 'key') return dir * (a.keyCount - b.keyCount);
+    return dir * (a.count - b.count);
   });
 }
 
 function renderEvents(){
-  renderEventChips();
+  renderEventFilters();
   const wrap = document.getElementById('evTableWrap');
+  const summary = document.getElementById('evSummary');
   wrap.innerHTML = '';
 
+  document.getElementById('evByPage').classList.toggle('active', state.evGroup === 'page');
+  document.getElementById('evByEvent').classList.toggle('active', state.evGroup === 'event');
+
   if (state.eventsError){
+    summary.textContent = '';
     wrap.innerHTML = `<div class="ev-empty">Events didn't load: ${state.eventsError}</div>`;
     return;
   }
-  const groups = eventGroups();
-  if (!groups.length){
-    wrap.innerHTML = `<div class="ev-empty">${(state.eventRows || []).length ? 'Nothing matches those filters.' : 'No events recorded for this period yet.'}</div>`;
+
+  const rows = filteredRows();
+  const byPage = state.evGroup === 'page';
+
+  // Headline numbers first, so the shape of the period is readable
+  // before anyone starts reading rows.
+  const totalTimes = rows.reduce((s, r) => s + r.count, 0);
+  const keyTimes = rows.filter(r => r.keyEvent).reduce((s, r) => s + r.count, 0);
+  const pageCount = new Set(rows.map(r => r.page)).size;
+  const typeCount = new Set(rows.map(r => r.event)).size;
+  const filtered = state.evKeyOnly || state.evTypes.size || state.evSearch.trim();
+  summary.innerHTML = rows.length
+    ? `<b>${fmt(keyTimes)}</b> <span class="star">★</span> key events and <b>${fmt(totalTimes - keyTimes)}</b> other events, ` +
+      `from <b>${fmt(typeCount)}</b> ${typeCount === 1 ? 'kind of event' : 'kinds of event'} across <b>${fmt(pageCount)}</b> ${pageCount === 1 ? 'page' : 'pages'}` +
+      (filtered ? ' <span style="color:var(--text-dimmer)">· filtered</span>' : '')
+    : '';
+
+  if (!rows.length){
+    const any = (state.eventRows || []).length;
+    wrap.innerHTML = `<div class="ev-empty">${any ? 'Nothing matches those filters.' : 'No events recorded for this period yet.'}` +
+      (any ? '<br><button type="button" id="evReset">Show everything again</button>' : '') + '</div>';
+    const reset = document.getElementById('evReset');
+    if (reset) reset.addEventListener('click', clearEventFilters);
     return;
   }
 
+  const groups = sortGroups(byPage ? groupByPage(rows) : groupByEvent(rows));
   const maxCount = Math.max(...groups.map(g => g.count), 1);
-  const anySessions = groups.some(g => g.sessions !== null);
+  const showSessions = byPage && groups.some(g => g.sessions !== null);
+  // A column of dashes tells nobody anything — the Key column only
+  // appears when something in view is actually a key event.
+  const showKey = byPage && groups.some(g => g.keyCount > 0);
 
+  const arrow = k => state.evSort.key === k ? `<span class="arrow">${state.evSort.dir === -1 ? '↓' : '↑'}</span>` : '';
   const table = document.createElement('table');
   table.className = 'ev';
-  const arrow = k => state.evSort.key === k ? `<span class="arrow">${state.evSort.dir === -1 ? '↓' : '↑'}</span>` : '';
-  table.innerHTML =
-    `<thead><tr>
-      <th data-sort="page">Page ${arrow('page')}</th>
-      <th data-sort="step">Step in journey ${arrow('step')}</th>
-      <th class="no-sort">Event</th>
-      ${anySessions ? `<th data-sort="sessions" style="text-align:right" title="Sessions that included this page">Sessions ${arrow('sessions')}</th>` : ''}
-      <th data-sort="count" style="text-align:right">Times ${arrow('count')}</th>
-      <th class="no-sort barcell"></th>
-      <th class="no-sort"></th>
-    </tr></thead><tbody></tbody>`;
+  table.innerHTML = byPage
+    ? `<thead><tr>
+         <th data-sort="name">Page ${arrow('name')}</th>
+         <th data-sort="step">Where in the journey ${arrow('step')}</th>
+         ${showSessions ? `<th data-sort="sessions" style="text-align:right" title="Sessions that included this page">Sessions ${arrow('sessions')}</th>` : ''}
+         ${showKey ? `<th data-sort="key" style="text-align:right">Key ${arrow('key')}</th>` : ''}
+         <th data-sort="count" style="text-align:right">Events ${arrow('count')}</th>
+         <th class="barcell"></th>
+         <th></th>
+       </tr></thead><tbody></tbody>`
+    : `<thead><tr>
+         <th data-sort="name">Event ${arrow('name')}</th>
+         <th data-sort="pages" style="text-align:right">Pages ${arrow('pages')}</th>
+         <th data-sort="count" style="text-align:right">Times ${arrow('count')}</th>
+         <th class="barcell"></th>
+         <th></th>
+       </tr></thead><tbody></tbody>`;
+
   table.querySelectorAll('th[data-sort]').forEach(th => {
     th.addEventListener('click', () => {
       const k = th.dataset.sort;
       if (state.evSort.key === k) state.evSort.dir *= -1;
-      else state.evSort = { key: k, dir: (k === 'page' || k === 'step') ? 1 : -1 };
+      else state.evSort = { key: k, dir: (k === 'name' || k === 'step') ? 1 : -1 };
       renderEvents();
     });
   });
 
+  const bar = (n, color) => `<td class="barcell"><div class="track"><div class="fill" style="width:${Math.max(3, (n / maxCount) * 100)}%;background:${color}"></div></div></td>`;
   const tbody = table.querySelector('tbody');
-  groups.forEach(g => {
-    const open = state.evOpen.has(g.page);
-    const step = stepLabel(g.page);
-    const url = urlFor(g.page);
-    const chain = chainIndex.get(g.page);
 
+  groups.forEach(g => {
+    const open = state.evOpen.has(g.id);
     const tr = document.createElement('tr');
-    tr.className = 'page-row' + (open ? ' open' : '');
+    tr.className = 'group-row' + (open ? ' open' : '');
     tr.tabIndex = 0;
     tr.setAttribute('role', 'button');
     tr.setAttribute('aria-expanded', open ? 'true' : 'false');
-    tr.innerHTML =
-      `<td><span class="pg"><span class="caret">▶</span><span class="dot" style="background:${colorFor(g.page)}"></span>` +
-        `<span><span class="nm">${friendly(g.page)}</span><br><span class="path">${g.page}</span></span></span></td>` +
-      `<td><span class="step${step ? '' : ' off'}">${step || 'Off the traced paths'}</span></td>` +
-      `<td>${g.events.length} event ${g.events.length === 1 ? 'type' : 'types'}${g.keyCount ? `<span class="key-tag">★ ${fmt(g.keyCount)} key</span>` : ''}</td>` +
-      (anySessions ? `<td class="num">${g.sessions === null ? '—' : fmt(g.sessions)}</td>` : '') +
-      `<td class="num">${fmt(g.count)}</td>` +
-      `<td class="barcell"><div class="track"><div class="fill" style="width:${Math.max(3, (g.count / maxCount) * 100)}%;background:${colorFor(g.page)}"></div></div></td>` +
-      `<td><span class="row-actions">${chain ? '<button type="button" class="see-path">See path</button>' : ''}${url ? `<a href="${url}" target="_blank" rel="noopener">Open ↗</a>` : ''}</span></td>`;
+
+    if (byPage){
+      tr.innerHTML =
+        `<td><span class="lead-cell"><span class="caret">▶</span><span class="dot" style="background:${g.color}"></span>` +
+          `<span style="min-width:0"><span class="nm">${g.title}</span><span class="path">${g.path}</span></span></span></td>` +
+        `<td>${stepCell(g.page)}</td>` +
+        (showSessions ? `<td class="num">${g.sessions === null ? '—' : fmt(g.sessions)}</td>` : '') +
+        (showKey ? `<td class="key">${g.keyCount ? '★ ' + fmt(g.keyCount) : '<span class="none">—</span>'}</td>` : '') +
+        `<td class="num lead">${fmt(g.count)}</td>` +
+        bar(g.count, g.color) +
+        `<td><span class="ev-actions">${g.chain ? '<button type="button" class="see-path">See path</button>' : ''}` +
+          `${g.url ? `<a href="${g.url}" target="_blank" rel="noopener">Open ↗</a>` : ''}</span></td>`;
+    } else {
+      tr.innerHTML =
+        `<td><span class="lead-cell"><span class="caret">▶</span>` +
+          `<span class="dot" style="background:${g.keyEvent ? KEY_EVENT_COLOR : '#7C5CBF'}"></span>` +
+          `<span style="min-width:0"><span class="nm">${g.title}${g.keyEvent ? '<span class="keystar">★ Key event</span>' : ''}</span></span></span></td>` +
+        `<td class="num">${fmt(g.pages)}</td>` +
+        `<td class="num lead">${fmt(g.count)}</td>` +
+        bar(g.count, g.keyEvent ? KEY_EVENT_COLOR : '#7C5CBF') +
+        `<td></td>`;
+    }
 
     const toggle = () => {
-      if (open) state.evOpen.delete(g.page); else state.evOpen.add(g.page);
+      if (open) state.evOpen.delete(g.id); else state.evOpen.add(g.id);
       renderEvents();
     };
     tr.addEventListener('click', toggle);
     tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
     const seePath = tr.querySelector('.see-path');
-    if (seePath) seePath.addEventListener('click', e => { e.stopPropagation(); focusChain(chain); });
+    if (seePath) seePath.addEventListener('click', e => { e.stopPropagation(); focusChain(g.chain); });
     tr.querySelectorAll('a').forEach(a => a.addEventListener('click', e => e.stopPropagation()));
     tbody.appendChild(tr);
 
-    if (open){
-      g.events.forEach(ev => {
-        const r = document.createElement('tr');
-        r.className = 'ev-row';
+    if (!open) return;
+
+    g.children.forEach(c => {
+      const r = document.createElement('tr');
+      r.className = 'child-row';
+      if (byPage){
         r.innerHTML =
-          `<td></td><td></td>` +
-          `<td class="ev-name">${humanizeEventName(ev.event)}${ev.keyEvent ? '<span class="key-tag">★ Key event</span>' : ''}</td>` +
-          (anySessions ? `<td class="num">${ev.sessions === undefined || ev.sessions === null ? '—' : fmt(ev.sessions)}</td>` : '') +
-          `<td class="num">${fmt(ev.count)}</td>` +
-          `<td class="barcell"><div class="track"><div class="fill" style="width:${Math.max(3, (ev.count / maxCount) * 100)}%;background:${ev.keyEvent ? KEY_EVENT_COLOR : '#7C5CBF'}"></div></div></td>` +
+          `<td class="child-cell">${humanizeEventName(c.event)}${c.keyEvent ? '<span class="keystar">★ Key event</span>' : ''}</td>` +
+          `<td></td>` +
+          (showSessions ? `<td class="num">${c.sessions === undefined || c.sessions === null ? '—' : fmt(c.sessions)}</td>` : '') +
+          (showKey ? `<td class="key">${c.keyEvent ? '★ ' + fmt(c.count) : '<span class="none">—</span>'}</td>` : '') +
+          `<td class="num">${fmt(c.count)}</td>` +
+          bar(c.count, c.keyEvent ? KEY_EVENT_COLOR : '#7C5CBF') +
           `<td></td>`;
-        tbody.appendChild(r);
-      });
-    }
+      } else {
+        const url = urlFor(c.page), chain = chainIndex.get(c.page);
+        r.innerHTML =
+          `<td class="child-cell"><span class="nm" style="font-weight:500">${friendly(c.page)}</span>` +
+            `<span class="path">${c.page}</span></td>` +
+          `<td>${stepCell(c.page)}</td>` +
+          `<td class="num">${fmt(c.count)}</td>` +
+          bar(c.count, c.keyEvent ? KEY_EVENT_COLOR : '#7C5CBF') +
+          `<td><span class="ev-actions">${chain ? '<button type="button" class="see-path">See path</button>' : ''}` +
+            `${url ? `<a href="${url}" target="_blank" rel="noopener">Open ↗</a>` : ''}</span></td>`;
+        const sp = r.querySelector('.see-path');
+        if (sp) sp.addEventListener('click', e => { e.stopPropagation(); focusChain(chain); });
+      }
+      tbody.appendChild(r);
+    });
   });
 
   wrap.appendChild(table);
+}
+
+function clearEventFilters(){
+  state.evTypes.clear();
+  state.evKeyOnly = false;
+  state.evSearch = '';
+  const box = document.getElementById('evSearch');
+  if (box) box.value = '';
+  renderEvents();
 }
 
 // Jump from an events row to the Pathway chart, with that page's branch
@@ -1171,18 +1340,10 @@ document.getElementById('pickClear').addEventListener('click', () => {
   renderPicker(); renderStats(); renderChart();
 });
 document.getElementById('evSearch').addEventListener('input', e => { state.evSearch = e.target.value; renderEvents(); });
-document.getElementById('evAll').addEventListener('click', () => {
-  state.evKeyOnly = false;
-  document.getElementById('evAll').classList.add('active');
-  document.getElementById('evKey').classList.remove('active');
-  renderEvents();
-});
-document.getElementById('evKey').addEventListener('click', () => {
-  state.evKeyOnly = true;
-  document.getElementById('evKey').classList.add('active');
-  document.getElementById('evAll').classList.remove('active');
-  renderEvents();
-});
+document.getElementById('evKeyBtn').addEventListener('click', () => { state.evKeyOnly = !state.evKeyOnly; renderEvents(); });
+document.getElementById('evClear').addEventListener('click', clearEventFilters);
+document.getElementById('evByPage').addEventListener('click', () => { state.evGroup = 'page'; state.evOpen.clear(); renderEvents(); });
+document.getElementById('evByEvent').addEventListener('click', () => { state.evGroup = 'event'; state.evOpen.clear(); renderEvents(); });
 
 // Columns size themselves to the space available, so a resize redraws.
 let resizeTimer = null;
