@@ -39,6 +39,15 @@
   .data-status.is-live::before{background:#1E8A6E;}
   .data-status.is-fallback{color:var(--amber);border-color:#F0DCB8;background:#FBF5EA;}
   .data-status.is-fallback::before{background:var(--amber);}
+  .data-status.is-busy{color:var(--text-dim);}
+  .data-status.is-busy::before{background:none;width:9px;height:9px;border:1.5px solid var(--line);border-top-color:var(--cyan);animation:spin .7s linear infinite;}
+
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .spinner{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;flex:none;}
+  .panel-wait{position:absolute;inset:0;z-index:8;display:none;align-items:center;justify-content:center;gap:9px;
+    background:rgba(255,255,255,0.66);backdrop-filter:blur(1px);font-size:12.5px;color:var(--text-dim);}
+  .panel.busy .panel-wait{display:flex;}
+  .period-btn{position:relative;}
 
   .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#fff;}
   .seg button{font-family:var(--font-mono);font-size:9.5px;padding:4px 10px;line-height:1.6;background:#fff;border:none;border-right:1px solid var(--line);color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease;}
@@ -58,7 +67,7 @@
   .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-dim);}
   .swatch{width:7px;height:7px;border-radius:2px;display:inline-block;}
 
-  .panel{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .panel{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;position:relative;}
   .panel-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px;}
   .panel-head h2{font-family:var(--font-display);font-size:15px;margin:0;font-weight:500;}
   .panel-head .hint{font-size:11.5px;color:var(--text-dimmer);}
@@ -176,7 +185,10 @@
     .barcell{display:none;}
   }
   @media (prefers-reduced-motion:reduce){
-    *{transition:none !important;animation:none !important;scroll-behavior:auto !important;}
+    *{transition:none !important;scroll-behavior:auto !important;}
+    /* the spinner still turns — it's the only thing telling you the
+       report is working, so it just turns more slowly */
+    .spinner, .data-status.is-busy::before{animation-duration:1.8s;}
   }
 </style>
 </head>
@@ -218,6 +230,7 @@
         <span class="hint">tick a starting page to add its branch · click any page to open the next step · drag the chart to move around</span>
       </div>
     </div>
+    <div class="panel-wait" id="waitPathway" role="status" aria-live="polite"><span class="spinner"></span><span>Fetching this period from Google Analytics…</span></div>
     <div class="split">
       <nav class="picker" id="picker" aria-label="Choose starting pages">
         <h3>Pages sessions start on</h3>
@@ -245,6 +258,7 @@
       <h2>What happened, and where in the journey</h2>
       <span class="hint">click a page to see its events · automatic page views and scrolls are left out</span>
     </div>
+    <div class="panel-wait" id="waitEvents" role="status" aria-live="polite"><span class="spinner"></span><span>Fetching this period from Google Analytics…</span></div>
     <div class="ev-tools">
       <input type="search" id="evSearch" placeholder="Find a page or event…" aria-label="Find a page or event">
       <div class="seg" role="group" aria-label="Event filter">
@@ -1178,12 +1192,33 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(renderChart, 120);
 });
 
-/* ---- live feed ---- */
+/* =========================================================
+   9. LIVE FEED — kept snappy three ways: a period already
+   fetched is re-shown from memory instead of re-fetched, the
+   periods you haven't opened yet are fetched quietly in the
+   background so the first switch is instant, and a slow answer
+   never blanks the chart — the old one stays put under a
+   spinner until the new one is ready.
+========================================================= */
 const LIVE_DATA_URL = "https://script.google.com/macros/s/AKfycbxPK1sppCeKdKfi13Y9R6MSBQkfMAXi0Ht9NmRgXvuqxYl7IMTBg4-U38Qh1Ks9srwn/exec";
+
+const PERIODS = [
+  { mode: 'month', value: 0 },
+  { mode: 'month', value: 1 },
+  { mode: 'range', value: 6 },
+];
+const CLIENT_CACHE_MS = 10 * 60 * 1000; // after this, a shown period quietly refreshes itself
+const periodCache = new Map();          // 'month:1' -> payload
+const inFlight = new Map();             // one request per period, however many clicks
+let requestSeq = 0;                     // only the newest request is allowed to paint
+let prefetchStarted = false;
+
+const periodKey = (mode, value) => mode + ':' + value;
 
 function setDataStatus(text, ok){
   const el = document.getElementById('dataStatus');
   el.textContent = text;
+  el.classList.toggle('is-busy', ok === 'busy');
   el.classList.toggle('is-live', ok === true);
   el.classList.toggle('is-fallback', ok === false);
 }
@@ -1191,6 +1226,13 @@ function setActivePeriodButton(mode, value){
   document.querySelectorAll('.period-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode && Number(btn.dataset.value) === value);
   });
+}
+// Dims whichever panel is on screen and puts a spinner over it. The
+// chart underneath stays readable, so a slow period never leaves you
+// looking at an empty box.
+function setBusy(on){
+  document.getElementById('pathwayPanel').classList.toggle('busy', !!on);
+  document.getElementById('eventsPanel').classList.toggle('busy', !!on);
 }
 
 // Older deployments of the Apps Script rooted the tree at the homepage
@@ -1211,41 +1253,120 @@ function applyData(tree, eventRows, eventsError, pageSessions, totalSessions){
   buildChainIndex();
 
   // Keep whatever was ticked if it still exists in the new period,
-  // otherwise start with the busiest few.
+  // otherwise start with the busiest few. Opened steps are kept too —
+  // any that no longer exist simply don't reappear.
   const available = new Set(startingPages().map(c => c.name));
   state.selected = state.selected.filter(p => available.has(p));
-  state.expanded.clear();
   if (firstLoad || !state.selected.length) state.selected = startingPages().slice(0, 3).map(c => c.name);
   state.selected.forEach(p => state.expanded.add(keyOf([p])));
   state.evOpen.clear();
   renderCurrent();
 }
 
+function showPayload(p){
+  state.periodLabel = p.month || '';
+  state.totalSessions = p.totalSessions || null;
+  setDataStatus('Live · ' + (p.month || 'this period') + ' · updated ' + p.stamp, true);
+  applyData(p.tree, p.eventRows, p.eventsError, p.pageSessions, p.totalSessions);
+}
+function showFallback(){
+  setDataStatus('Live feed unavailable right now — showing example data', false);
+  applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS, FALLBACK_TREE.value);
+}
+
+// One fetch per period at a time: clicking the same button twice while
+// it's still loading joins the request already running rather than
+// starting a second one.
+function fetchPeriod(mode, value){
+  const key = periodKey(mode, value);
+  if (inFlight.has(key)) return inFlight.get(key);
+
+  const param = (mode === 'range') ? ('rangeMonths=' + value) : ('months=' + value);
+  const sep = LIVE_DATA_URL.indexOf('?') === -1 ? '?' : '&';
+  const promise = fetch(LIVE_DATA_URL + sep + param, { cache: 'no-store' })
+    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(data => {
+      if (!data || data.ok === false || !data.tree) throw new Error((data && data.error) || 'Malformed response');
+      const payload = {
+        tree: data.tree,
+        eventRows: data.eventsByPage || [],
+        eventsError: data.eventsByPageError || null,
+        pageSessions: data.pageSessions,
+        totalSessions: data.totalSessions,
+        month: data.month,
+        fetchedAt: Date.now(),
+        stamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      periodCache.set(key, payload);
+      return payload;
+    })
+    .finally(() => { inFlight.delete(key); });
+
+  inFlight.set(key, promise);
+  return promise;
+}
+
 async function loadPeriod(mode, value){
   setActivePeriodButton(mode, value);
+  const key = periodKey(mode, value);
+  const seq = ++requestSeq;
+
   if (!LIVE_DATA_URL){
     setDataStatus('Showing example data — add your Apps Script URL to go live', false);
     applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS, FALLBACK_TREE.value);
     return;
   }
-  setDataStatus('Loading live data from Google Analytics…', null);
-  try {
-    const param = (mode === 'range') ? ('rangeMonths=' + value) : ('months=' + value);
-    const sep = LIVE_DATA_URL.indexOf('?') === -1 ? '?' : '&';
-    const res = await fetch(LIVE_DATA_URL + sep + param, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (!data || data.ok === false || !data.tree) throw new Error((data && data.error) || 'Malformed response');
-    const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
-    state.periodLabel = data.month || '';
-    state.totalSessions = data.totalSessions || null;
-    applyData(data.tree, data.eventsByPage || [], data.eventsByPageError || null, data.pageSessions, data.totalSessions);
-  } catch (err){
-    console.warn('Live GA4 feed unavailable, showing example data instead:', err);
-    setDataStatus('Live feed unavailable right now — showing example data', false);
-    applyData(FALLBACK_TREE, FALLBACK_EVENTS_BY_PAGE, null, FALLBACK_PAGE_SESSIONS, FALLBACK_TREE.value);
+
+  // Already have it: show it immediately, no spinner at all.
+  const cached = periodCache.get(key);
+  if (cached){
+    showPayload(cached);
+    setBusy(false);
+    // Getting on for stale — refresh behind the scenes and swap the
+    // numbers in when it lands, without interrupting anything.
+    if (Date.now() - cached.fetchedAt > CLIENT_CACHE_MS){
+      fetchPeriod(mode, value)
+        .then(fresh => { if (seq === requestSeq) showPayload(fresh); })
+        .catch(() => {});
+    }
+    startPrefetch(key);
+    return;
   }
+
+  setBusy(true);
+  setDataStatus('Fetching ' + periodName(mode, value) + ' from Google Analytics…', 'busy');
+  try {
+    const payload = await fetchPeriod(mode, value);
+    if (seq !== requestSeq) return;   // a later click already won
+    showPayload(payload);
+  } catch (err){
+    if (seq !== requestSeq) return;
+    console.warn('Live GA4 feed unavailable, showing example data instead:', err);
+    showFallback();
+  } finally {
+    if (seq === requestSeq) setBusy(false);
+  }
+  startPrefetch(key);
+}
+
+function periodName(mode, value){
+  if (mode === 'range') return 'the last ' + value + ' months';
+  return value === 0 ? 'this month' : value === 1 ? 'last month' : 'that period';
+}
+
+// Once the first period is on screen, quietly collect the others so the
+// first click on them is instant. One at a time, and only after a pause,
+// so it never competes with what's actually being looked at.
+function startPrefetch(currentKey){
+  if (prefetchStarted || !LIVE_DATA_URL) return;
+  prefetchStarted = true;
+  setTimeout(async () => {
+    for (const p of PERIODS){
+      const k = periodKey(p.mode, p.value);
+      if (k === currentKey || periodCache.has(k)) continue;
+      try { await fetchPeriod(p.mode, p.value); } catch (err){ /* it'll be retried when clicked */ }
+    }
+  }, 1500);
 }
 
 document.querySelectorAll('.period-btn').forEach(btn => {
