@@ -23,6 +23,8 @@
     --rust:#BE4A2C;
     --slate:#848DA0;
     --root:#2E3644;
+    --event:#7C5CBF;
+    --key-event:#B8860B;
     --font-display:'Space Grotesk',sans-serif;
     --font-body:'IBM Plex Sans',sans-serif;
     --font-mono:'IBM Plex Mono',monospace;
@@ -47,26 +49,13 @@
   .period-btn.active{background:var(--root);color:#fff;}
   .data-status::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--text-dimmer);flex:none;}
 
-  .events-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 10px;line-height:1.6;background:#fff;border:1px solid var(--line);border-radius:6px;color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}
-  .events-btn:hover{background:var(--cyan);color:#fff;border-color:var(--cyan);}
+  .view-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-left:auto;}
+  .view-btn{font-family:var(--font-mono);font-size:9.5px;padding:3px 12px;line-height:1.6;background:#fff;border:none;border-right:1px solid var(--line);color:var(--text-dim);cursor:pointer;transition:background .15s ease,color .15s ease;}
+  .view-btn:last-child{border-right:none;}
+  .view-btn:hover{background:var(--bg);}
+  .view-btn.active{background:var(--event);color:#fff;}
 
-  .events-overlay{position:fixed;inset:0;z-index:60;background:rgba(27,32,39,0.45);display:flex;align-items:center;justify-content:center;padding:24px;}
-  .events-overlay[hidden]{display:none;}
-  .events-modal{background:#fff;border-radius:12px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(27,32,39,0.25);}
-  .events-modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--line);}
-  .events-modal-head h3{margin:0;font-family:var(--font-display);font-size:16px;font-weight:600;}
-  .events-modal-sub{margin:3px 0 0;font-family:var(--font-mono);font-size:11px;color:var(--text-dimmer);}
-  .events-close{border:none;background:none;font-size:22px;line-height:1;color:var(--text-dimmer);cursor:pointer;padding:2px 6px;border-radius:6px;}
-  .events-close:hover{background:var(--bg);color:var(--text);}
-  .events-modal-body{overflow-y:auto;padding:8px 12px 16px;}
-  .events-row{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:6px;}
-  .events-row:hover{background:var(--bg);}
-  .events-row .en{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .events-row .ec{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
-  .events-section{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dimmer);padding:14px 8px 6px;}
-  .events-section:first-child{padding-top:6px;}
-  .events-section.is-key{color:#B8860B;}
-  .events-empty{padding:24px 12px;text-align:center;color:var(--text-dimmer);font-size:13px;}
+  .chart-empty{padding:60px 20px;text-align:center;color:var(--text-dimmer);font-size:13px;max-width:360px;margin:0 auto;}
   .data-status.is-live{color:#1E8A6E;border-color:#BFE3D4;background:#F1FAF6;}
   .data-status.is-live::before{background:#1E8A6E;}
   .data-status.is-fallback{color:var(--amber);border-color:#F0DCB8;background:#FBF5EA;}
@@ -157,9 +146,12 @@
         <button class="period-btn" data-mode="month" data-value="1" type="button">Last month</button>
         <button class="period-btn" data-mode="range" data-value="6" type="button">Last 6 months</button>
       </div>
-      <button class="events-btn" id="eventsBtn" type="button">Events ↗</button>
+      <div class="view-toggle" role="group" aria-label="Chart view">
+        <button class="view-btn" data-view="pathway" type="button">Pathway</button>
+        <button class="view-btn" data-view="events" type="button">Events</button>
+      </div>
     </div>
-    <div class="legend">
+    <div class="legend" id="legend">
       <span class="legend-item"><span class="swatch" style="background:var(--root)"></span>Homepage</span>
       <span class="legend-item"><span class="swatch" style="background:var(--amber)"></span>Programs, resources &amp; WeCollab</span>
       <span class="legend-item"><span class="swatch" style="background:var(--cyan)"></span>Company &amp; events</span>
@@ -170,8 +162,8 @@
 
   <div class="panel">
     <div class="panel-head">
-      <h2>Where visitors go, step by step</h2>
-      <span class="hint">thicker line = more visits · hover a page for details · drag to pan around</span>
+      <h2 id="panelTitle">Where visitors go, step by step</h2>
+      <span class="hint" id="panelHint">thicker line = more visits · hover a page for details · drag to pan around</span>
     </div>
     <div class="panel-body">
       <nav class="side-nav" id="sideNav" aria-label="Jump to entry page">
@@ -186,28 +178,15 @@
   </div>
 
   <footer>
-    <p>Each line is visitors moving from one page to the next; a thicker line means more visitors took that path. Page names marked <span class="link-glyph" style="font-family:var(--font-mono)">↗</span> open the real, live page in a new tab.</p>
+    <p id="footerMain">Each line is visitors moving from one page to the next; a thicker line means more visitors took that path. Page names marked <span class="link-glyph" style="font-family:var(--font-mono)">↗</span> open the real, live page in a new tab.</p>
     <details>
       <summary>Notes on how this was put together</summary>
-      <p>Rebuilt from a multi-part analytics export. Flow width uses a square-root scale so smaller paths stay visible next to the biggest ones — the exact visit count is always in the tooltip. To keep each section easy to scan, only the top pages in the three detailed sections (Collaborative Response, WeCollab, Resources) are shown individually; smaller paths are grouped into "Other pages," the same way the analytics tool groups its own long tail. "Other pages" isn't linked, since it's a rollup rather than one single page.</p>
+      <p>Rebuilt from a multi-part analytics export. Flow width uses a square-root scale so smaller paths stay visible next to the biggest ones — the exact visit count is always in the tooltip. Every branch traces automatically as far as its own traffic supports (not fixed to any set number of pages); to keep each section easy to scan, only a branch's top pages are shown individually, with smaller paths grouped into "Other pages" — the same rollup idea the analytics tool itself uses for its own long tail. "Other pages" isn't linked, since it's a rollup rather than one single page.</p>
     </details>
   </footer>
 </div>
 
 <div id="tooltip"></div>
-
-<div class="events-overlay" id="eventsOverlay" hidden>
-  <div class="events-modal" role="dialog" aria-label="Events">
-    <div class="events-modal-head">
-      <div>
-        <h3>Events</h3>
-        <p class="events-modal-sub" id="eventsModalPeriod"></p>
-      </div>
-      <button class="events-close" id="eventsClose" type="button" aria-label="Close">×</button>
-    </div>
-    <div class="events-modal-body" id="eventsModalBody"></div>
-  </div>
-</div>
 
 <script>
 /* ---------------------------------------------------------
@@ -264,49 +243,128 @@ const FALLBACK_TREE = {
   ]
 };
 
+// Illustrative only, like FALLBACK_TREE above — shown in the Events
+// view when there's no live connection.
+const FALLBACK_EVENTS_BY_PAGE = [
+  { page: "/wecollab/pricing", event: "generate_lead", count: 6, keyEvent: true },
+  { page: "/wecollab", event: "click", count: 14, keyEvent: false },
+  { page: "/wecollab/FREE-trial", event: "sign_up", count: 4, keyEvent: true },
+  { page: "/collaborative-response-1", event: "click", count: 9, keyEvent: false },
+  { page: "/collaborative-response-1", event: "view_search_results", count: 2, keyEvent: false },
+  { page: "/free", event: "file_download", count: 7, keyEvent: false },
+  { page: "/resources-and-samples", event: "click", count: 5, keyEvent: false },
+  { page: "/publications/courses", event: "generate_lead", count: 1, keyEvent: true },
+];
+
 /* ---------------------------------------------------------
    Everything below builds and wires up the chart from a tree
    object shaped like FALLBACK_TREE above. It's wrapped in one
    function so it can be re-run whenever the period toggle picks
    a different month — see loadPeriod() at the very end.
 --------------------------------------------------------- */
-let activeCleanup = null; // torn down at the start of every renderChart() call
-
-function renderChart(tree){
-  // A previous call may still have window-level listeners attached
-  // (panning, scroll-tracking for the side-nav) — remove those before
-  // wiring up a new set, or switching periods would double them up.
-  if (typeof activeCleanup === 'function') activeCleanup();
-  const cleanupFns = [];
-  function onWindow(type, fn, opts){
-    window.addEventListener(type, fn, opts);
-    cleanupFns.push(function(){ window.removeEventListener(type, fn, opts); });
-  }
-  activeCleanup = function(){ cleanupFns.forEach(function(fn){ fn(); }); };
-
-  // Clear anything the previous render drew before building the new one.
-  d3.select('#chart').selectAll('*').remove();
-  document.getElementById('sideNavList').innerHTML = '';
-  document.getElementById('colSticky').innerHTML = '';
+/* ---------------------------------------------------------
+   Shared tooltip — used by both the Pathway chart and the
+   Events chart, so it only needs to exist once.
+--------------------------------------------------------- */
+const tooltip = document.getElementById('tooltip');
+function showTip(html, evt){
+  tooltip.innerHTML = html;
+  tooltip.classList.add('show');
+  moveTip(evt);
+}
+function moveTip(evt){
+  const pad = 16;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + 320 > window.innerWidth) x = evt.clientX - 320 - pad;
+  if (y + 90 > window.innerHeight) y = evt.clientY - 90 - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTip(){ tooltip.classList.remove('show'); }
 
 /* ---------------------------------------------------------
-   1b. LIVE URL RESOLUTION
-   Matched against the site's actual XML sitemaps. Anything
-   not found there (rollups, and one page that no longer
-   appears in the current sitemap) is left unlinked.
+   CLICK-AND-DRAG PANNING — set up once, works for whichever
+   view (Pathway or Events) currently occupies the chart, since
+   it only cares about the .chart-scroll container itself, not
+   what's inside it. A Figma-style hand tool: click, hold, drag
+   anywhere to pan (moves both the horizontal scroller and the
+   page's vertical scroll together). Mouse only — touch devices
+   keep their native scroll gestures. A small movement threshold
+   means an ordinary click (e.g. to open a linked page) still
+   works normally.
+--------------------------------------------------------- */
+(function enablePanning(){
+  const scrollEl = document.querySelector('.chart-scroll');
+  const THRESHOLD = 6;
+  let isDown = false, dragged = false, suppressClick = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+  let pendingDx = 0, pendingDy = 0, rafId = null;
+
+  function applyPan(){
+    scrollEl.scrollLeft = startLeft - pendingDx;
+    window.scrollTo(window.scrollX, startTop - pendingDy);
+    rafId = null;
+  }
+
+  scrollEl.addEventListener('pointerdown', (evt) => {
+    if (evt.pointerType === 'touch' || evt.button !== 0) return;
+    isDown = true;
+    dragged = false;
+    startX = evt.clientX;
+    startY = evt.clientY;
+    startLeft = scrollEl.scrollLeft;
+    startTop = window.scrollY;
+    scrollEl.classList.add('grabbing');
+    document.body.classList.add('panning');
+  });
+
+  window.addEventListener('pointermove', (evt) => {
+    if (!isDown) return;
+    const dx = evt.clientX - startX;
+    const dy = evt.clientY - startY;
+    if (!dragged && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) dragged = true;
+    if (dragged){
+      pendingDx = dx; pendingDy = dy;
+      if (rafId === null) rafId = requestAnimationFrame(applyPan);
+    }
+  });
+
+  function endDrag(){
+    if (!isDown) return;
+    isDown = false;
+    scrollEl.classList.remove('grabbing');
+    document.body.classList.remove('panning');
+    if (dragged) suppressClick = true;
+  }
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+
+  // A drag that ends over a linked node still fires a native
+  // click — swallow it here so panning never accidentally
+  // opens a page.
+  scrollEl.addEventListener('click', (evt) => {
+    if (suppressClick){ evt.stopPropagation(); evt.preventDefault(); suppressClick = false; }
+  }, true);
+})();
+
+/* ---------------------------------------------------------
+   LIVE URL RESOLUTION — matched against the site's actual
+   navigation. Anything not recognized (rollups, "Other pages",
+   etc.) is left unlinked. Shared by both the Pathway and
+   Events views, since page nodes appear in both.
 --------------------------------------------------------- */
 const SITE = "https://www.jigsawlearning.ca";
-const UNLINKABLE = new Set(["Others"]);
+const UNLINKABLE = new Set(["Others", "Other pages", "Other events"]);
 function urlFor(path){
   if (UNLINKABLE.has(path)) return null;
   return SITE + path;
 }
 
 /* ---------------------------------------------------------
-   1c. PLAIN-ENGLISH LABELS
-   The chart is for a non-technical client, so every node
-   displays a friendly name instead of a raw URL path. The
-   path itself still drives the link and shows on hover.
+   PLAIN-ENGLISH LABELS — the chart is for a non-technical
+   client, so every node displays a friendly name instead of a
+   raw URL path. The path itself still drives the link and
+   shows on hover.
 --------------------------------------------------------- */
 const LABELS = {
   "/": "Homepage",
@@ -372,15 +430,15 @@ function friendly(path){
   const seg = path.replace(/\/$/, '').split('/').filter(Boolean).pop() || path;
   return seg.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
+function humanizeEventName(name){
+  return String(name).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
 
 /* ---------------------------------------------------------
-   1d. SIMPLIFY THE DEEP BRANCHES
-   The three expanded sections originally listed 14–21
-   individual pages each — accurate, but a lot to take in at
-   a glance. This keeps each branch's top pages visible and
-   folds the long tail into "Other pages," the same rollup
-   idea the data already uses elsewhere. Raise the number to
-   show more detail, or remove the call below to see everything.
+   SIMPLIFY DEEP BRANCHES — folds a branch's long tail into
+   "Other pages" past MAX_CHILDREN_SHOWN, so no single section
+   turns into a wall of tiny entries. Raise the number to show
+   more detail per branch.
 --------------------------------------------------------- */
 const MAX_CHILDREN_SHOWN = 6;
 function simplifyBranches(node){
@@ -395,12 +453,15 @@ function simplifyBranches(node){
     node.children = [...kept, { name: 'Others', value: folded }];
   }
 }
-tree.children.forEach(simplifyBranches);
 
 /* ---------------------------------------------------------
-   2. CATEGORY COLORS (semantic, not decorative)
+   CATEGORY COLORS (semantic, not decorative) — shared by both
+   views, since page nodes are colored the same way wherever
+   they appear.
 --------------------------------------------------------- */
 const COLORS = { home:'#B8C0CC', product:'#E3A857', company:'#4EC0C9', conversion:'#D9694F', other:'#6E7580' };
+const EVENT_COLOR = '#7C5CBF';
+const KEY_EVENT_COLOR = '#B8860B';
 const PRODUCT = ['/collaborative-response', '/getting-started-collaborative-response', '/wecollab', '/resources-and-samples', '/publications'];
 const COMPANY = ['/who-we-are', '/events', '/speaking'];
 const CONVERSION = ['/free', '/store'];
@@ -413,6 +474,37 @@ function categorize(path){
   if (CONVERSION.some(p => path.startsWith(p))) return 'conversion';
   return 'other';
 }
+
+let activeCleanup = null; // torn down at the start of every render, pathway or events
+
+function renderChart(tree){
+  // A previous call may still have window-level listeners attached
+  // (panning, scroll-tracking for the side-nav) — remove those before
+  // wiring up a new set, or switching periods would double them up.
+  if (typeof activeCleanup === 'function') activeCleanup();
+  const cleanupFns = [];
+  function onWindow(type, fn, opts){
+    window.addEventListener(type, fn, opts);
+    cleanupFns.push(function(){ window.removeEventListener(type, fn, opts); });
+  }
+  activeCleanup = function(){ cleanupFns.forEach(function(fn){ fn(); }); };
+
+  // Clear anything the previous render drew before building the new one.
+  d3.select('#chart').selectAll('*').remove();
+  document.getElementById('sideNavList').innerHTML = '';
+  document.getElementById('colSticky').innerHTML = '';
+  document.getElementById('sideNav').style.display = '';
+
+/* ---------------------------------------------------------
+   1d. SIMPLIFY THE DEEP BRANCHES
+   The three expanded sections originally listed 14–21
+   individual pages each — accurate, but a lot to take in at
+   a glance. This keeps each branch's top pages visible and
+   folds the long tail into "Other pages," the same rollup
+   idea the data already uses elsewhere. Raise the number to
+   show more detail, or remove the call below to see everything.
+--------------------------------------------------------- */
+tree.children.forEach(simplifyBranches);
 
 /* ---------------------------------------------------------
    3. FLATTEN TREE -> nodes / links (sqrt-scaled link value
@@ -436,11 +528,14 @@ addNode(tree, null);
 
 /* ---------------------------------------------------------
    4. LAYOUT
+   Width now depends on how deep this particular tree actually
+   goes — a period with only 3-page journeys stays compact; one
+   with 6-page journeys gets the room it needs automatically.
 --------------------------------------------------------- */
 const MARGIN = { top: 30, right: 220, bottom: 30, left: 20 };
-const WIDTH = 1000;
+const COLUMN_SPACING = 380; // horizontal room per column, tuned for typical label lengths
 
-// count nodes per depth (needs a first pass) to size height
+// count nodes per depth (needs a first pass) to size height + width
 const depthCounts = {};
 function passDepth(t, depth){
   depthCounts[depth] = (depthCounts[depth]||0) + 1;
@@ -448,7 +543,9 @@ function passDepth(t, depth){
 }
 passDepth(tree, 0);
 const maxCol = Math.max(...Object.values(depthCounts));
+const maxDepth = Math.max(...Object.keys(depthCounts).map(Number)); // 0 = root, so this is (columns - 1)
 const HEIGHT = Math.max(500, maxCol * 35 + 80);
+const WIDTH = MARGIN.left + MARGIN.right + COLUMN_SPACING * Math.max(maxDepth, 1);
 
 const svg = d3.select('#chart')
   .attr('width', WIDTH)
@@ -475,16 +572,21 @@ graph.links.forEach(l => { if (l.width < 1.2) l.width = 1.2; });
    5. COLUMN HEADERS — rendered into the sticky bar above the
    chart (see #colSticky) rather than inside the SVG, so they
    stay visible no matter how far down the page you've scrolled.
+   Labels scale to however many columns this period actually has.
 --------------------------------------------------------- */
 const byDepth = d3.group(graph.nodes, d => d.depth);
-const headerLabels = ['Entry page', 'Next page', 'Then'];
+function pathwayHeaderLabel(depth){
+  if (depth === 0) return 'Entry page';
+  if (depth === 1) return 'Next page';
+  return 'Page ' + (depth + 1);
+}
 const colSticky = document.getElementById('colSticky');
 colSticky.style.width = WIDTH + 'px';
 byDepth.forEach((list, depth) => {
   const x = d3.min(list, d => d.x0);
   const span = document.createElement('span');
   span.style.left = x + 'px';
-  span.textContent = headerLabels[depth] || '';
+  span.textContent = pathwayHeaderLabel(depth);
   colSticky.appendChild(span);
 });
 
@@ -564,22 +666,6 @@ nodeG.filter(d => d.depth <= 1).append('text')
 /* ---------------------------------------------------------
    8. INTERACTION
 --------------------------------------------------------- */
-const tooltip = document.getElementById('tooltip');
-function showTip(html, evt){
-  tooltip.innerHTML = html;
-  tooltip.classList.add('show');
-  moveTip(evt);
-}
-function moveTip(evt){
-  const pad = 16;
-  let x = evt.clientX + pad, y = evt.clientY + pad;
-  if (x + 320 > window.innerWidth) x = evt.clientX - 320 - pad;
-  if (y + 90 > window.innerHeight) y = evt.clientY - 90 - pad;
-  tooltip.style.left = x + 'px';
-  tooltip.style.top = y + 'px';
-}
-function hideTip(){ tooltip.classList.remove('show'); }
-
 function dim(exceptLinks, exceptNodes){
   linkSel.attr('stroke-opacity', d => exceptLinks.has(d) ? 0.85 : 0.06);
   nodeG.selectAll('.node-rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
@@ -713,87 +799,29 @@ updateActiveSideNav();
 onWindow('scroll', updateActiveSideNav, { passive: true });
 onWindow('resize', updateActiveSideNav);
 
-/* ---------------------------------------------------------
-   10. CLICK-AND-DRAG PANNING
-   A Figma-style hand tool: click, hold, and drag anywhere on
-   the chart to pan it in any direction (pans the horizontal
-   scroller and the page's vertical scroll together). Mouse
-   only — touch devices keep their native scroll gestures.
-   A small movement threshold means an ordinary click (e.g. to
-   open a linked page) still works normally.
---------------------------------------------------------- */
-(function enablePanning(){
-  const scrollEl = document.querySelector('.chart-scroll');
-  const THRESHOLD = 6;
-  let isDown = false, dragged = false, suppressClick = false;
-  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
-  let pendingDx = 0, pendingDy = 0, rafId = null;
-
-  function applyPan(){
-    scrollEl.scrollLeft = startLeft - pendingDx;
-    window.scrollTo(window.scrollX, startTop - pendingDy);
-    rafId = null;
-  }
-
-  scrollEl.addEventListener('pointerdown', (evt) => {
-    if (evt.pointerType === 'touch' || evt.button !== 0) return;
-    isDown = true;
-    dragged = false;
-    startX = evt.clientX;
-    startY = evt.clientY;
-    startLeft = scrollEl.scrollLeft;
-    startTop = window.scrollY;
-    scrollEl.classList.add('grabbing');
-    document.body.classList.add('panning');
-  });
-
-  onWindow('pointermove', (evt) => {
-    if (!isDown) return;
-    const dx = evt.clientX - startX;
-    const dy = evt.clientY - startY;
-    if (!dragged && (Math.abs(dx) > THRESHOLD || Math.abs(dy) > THRESHOLD)) dragged = true;
-    if (dragged){
-      pendingDx = dx; pendingDy = dy;
-      if (rafId === null) rafId = requestAnimationFrame(applyPan);
-    }
-  });
-
-  function endDrag(){
-    if (!isDown) return;
-    isDown = false;
-    scrollEl.classList.remove('grabbing');
-    document.body.classList.remove('panning');
-    if (dragged) suppressClick = true;
-  }
-  onWindow('pointerup', endDrag);
-  onWindow('pointercancel', endDrag);
-
-  // A drag that ends over a linked node still fires a native
-  // click — swallow it here so panning never accidentally
-  // opens a page.
-  scrollEl.addEventListener('click', (evt) => {
-    if (suppressClick){ evt.stopPropagation(); evt.preventDefault(); suppressClick = false; }
-  }, true);
-})();
-
 } // end renderChart()
 
 /* ---------------------------------------------------------
-   11. LIVE DATA + PERIOD TOGGLE + EVENTS PANEL
+   11. LIVE DATA + PERIOD TOGGLE + VIEW SWITCHING
    Paste the /exec URL from your deployed Apps Script web app
    below. Leave it blank to always show the example data above.
    On any failure (not deployed yet, wrong URL, GA4 unreachable,
    property has no traffic that month, etc.) this quietly falls
-   back to FALLBACK_TREE so the report never shows broken/empty.
-   The period buttons re-run this with either ?months= (a single
-   calendar month) or ?rangeMonths= (a rolling window) — see the
-   Apps Script's doGet() / computePeriod_().
+   back to the FALLBACK_* examples so the report never shows
+   broken/empty. The period buttons re-run this with either
+   ?months= (a single calendar month) or ?rangeMonths= (a
+   rolling window) — see the Apps Script's doGet(). Switching
+   between the Pathway and Events views never re-fetches — both
+   datasets come back in the same response, so flipping the
+   view toggle is instant.
 --------------------------------------------------------- */
 const LIVE_DATA_URL = "https://script.google.com/macros/s/AKfycbxPK1sppCeKdKfi13Y9R6MSBQkfMAXi0Ht9NmRgXvuqxYl7IMTBg4-U38Qh1Ks9srwn/exec";
 
-let latestEvents = [];
-let latestEventsPeriodLabel = '';
-let latestEventsError = null;
+let currentTreeData = FALLBACK_TREE;
+let currentEventsByPage = FALLBACK_EVENTS_BY_PAGE;
+let currentEventsByPageError = null;
+let currentPeriodLabel = '';
+let currentView = 'pathway'; // 'pathway' | 'events'
 
 function setDataStatus(text, ok){
   const el = document.getElementById('dataStatus');
@@ -809,13 +837,58 @@ function setActivePeriodButton(mode, value){
   });
 }
 
+function setActiveViewButton(view){
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+}
+
+function updatePanelCopy(view){
+  const title = document.getElementById('panelTitle');
+  const hint = document.getElementById('panelHint');
+  const legend = document.getElementById('legend');
+  const footer = document.getElementById('footerMain');
+  if (view === 'events'){
+    title.textContent = 'Events, and the pages that drove them';
+    hint.textContent = 'thicker line = more events · hover for details · drag to pan around';
+    legend.style.display = 'none';
+    footer.textContent = 'Each line connects a page to an event that happened there; a thicker line means it happened more often. Gold events are Key Events — GA4\'s term for what used to be called a "conversion." Routine automatic events (page views, scrolling, session starts) are left out here so the pages driving real actions stand out — the full raw list is still counted in the totals GA4 itself reports.';
+  } else {
+    title.textContent = 'Where visitors go, step by step';
+    hint.textContent = 'thicker line = more visits · hover a page for details · drag to pan around';
+    legend.style.display = '';
+    footer.textContent = 'Each line is visitors moving from one page to the next; a thicker line means more visitors took that path. Page names marked ↗ open the real, live page in a new tab.';
+  }
+}
+
+function renderCurrentView(){
+  updatePanelCopy(currentView);
+  if (currentView === 'events'){
+    renderEventsChart(currentEventsByPage, currentEventsByPageError);
+  } else {
+    renderChart(currentTreeData);
+  }
+}
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.view === currentView) return;
+    currentView = btn.dataset.view;
+    setActiveViewButton(currentView);
+    renderCurrentView();
+  });
+});
+setActiveViewButton(currentView);
+
 async function loadPeriod(mode, value){
   setActivePeriodButton(mode, value);
 
   if (!LIVE_DATA_URL){
     setDataStatus('Showing example data — add your Apps Script URL to go live', false);
-    latestEvents = []; latestEventsPeriodLabel = ''; latestEventsError = null;
-    renderChart(FALLBACK_TREE);
+    currentTreeData = FALLBACK_TREE;
+    currentEventsByPage = FALLBACK_EVENTS_BY_PAGE;
+    currentEventsByPageError = null;
+    renderCurrentView();
     return;
   }
   setDataStatus('Loading live data from Google Analytics…', null);
@@ -828,15 +901,18 @@ async function loadPeriod(mode, value){
     if (!data || data.ok === false || !data.tree) throw new Error((data && data.error) || 'Malformed response');
     const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setDataStatus('Live · ' + (data.month || 'this period') + ' · updated ' + stamp, true);
-    latestEvents = data.events || [];
-    latestEventsPeriodLabel = data.month || '';
-    latestEventsError = data.eventsError || null;
-    renderChart(data.tree);
+    currentTreeData = data.tree;
+    currentEventsByPage = data.eventsByPage || [];
+    currentEventsByPageError = data.eventsByPageError || null;
+    currentPeriodLabel = data.month || '';
+    renderCurrentView();
   } catch (err){
     console.warn('Live GA4 feed unavailable, showing example data instead:', err);
     setDataStatus('Live feed unavailable right now — showing example data', false);
-    latestEvents = []; latestEventsPeriodLabel = ''; latestEventsError = null;
-    renderChart(FALLBACK_TREE);
+    currentTreeData = FALLBACK_TREE;
+    currentEventsByPage = FALLBACK_EVENTS_BY_PAGE;
+    currentEventsByPageError = null;
+    renderCurrentView();
   }
 }
 
@@ -847,65 +923,236 @@ document.querySelectorAll('.period-btn').forEach(btn => {
 loadPeriod('month', 1); // last month, on first load — this month has little/no data right at the start of a new month
 
 /* ---------------------------------------------------------
-   12. EVENTS PANEL
-   Tucked behind one button rather than shown by default — the
-   pathway chart stays the focus, this is there when you want it.
+   12. EVENTS VIEW — a second, smaller sankey: Page → Event.
+   Reuses the same visual language as the Pathway chart (same
+   colors for pages, same node/link styling) so switching views
+   feels like the same tool, not a different one bolted on.
+   Pages keep their usual category color and stay clickable;
+   events are violet (gold if they're a Key Event) and aren't
+   linkable — an event isn't a page.
 --------------------------------------------------------- */
-function humanizeEventName(name){
-  return String(name).split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-}
+const EV_MAX_PAGES = 12;
+const EV_MAX_EVENTS_PER_PAGE = 6;
 
-function renderEventsModal(){
-  document.getElementById('eventsModalPeriod').textContent = latestEventsPeriodLabel;
-  const body = document.getElementById('eventsModalBody');
-  body.innerHTML = '';
+function renderEventsChart(rows, queryError){
+  if (typeof activeCleanup === 'function') activeCleanup();
+  const cleanupFns = [];
+  function onWindow(type, fn, opts){
+    window.addEventListener(type, fn, opts);
+    cleanupFns.push(function(){ window.removeEventListener(type, fn, opts); });
+  }
+  activeCleanup = function(){ cleanupFns.forEach(function(fn){ fn(); }); };
 
-  if (latestEventsError){
-    body.innerHTML = '<div class="events-empty">Couldn\'t load events: ' + latestEventsError + '</div>';
+  d3.select('#chart').selectAll('*').remove();
+  document.getElementById('sideNavList').innerHTML = '';
+  document.getElementById('colSticky').innerHTML = '';
+  document.getElementById('colSticky').style.width = '0px';
+  document.getElementById('sideNav').style.display = 'none';
+  document.getElementById('chart').setAttribute('height', 0);
+  document.getElementById('chart').setAttribute('width', 0);
+  const existingEmpty = document.querySelector('.chart-empty');
+  if (existingEmpty) existingEmpty.remove();
+
+  if (queryError || !rows || !rows.length){
+    const empty = document.createElement('div');
+    empty.className = 'chart-empty';
+    empty.textContent = queryError ? ("Couldn't load events: " + queryError) : 'No event data for this period yet.';
+    document.querySelector('.chart-scroll').appendChild(empty);
+    cleanupFns.push(function(){ empty.remove(); });
     return;
   }
-  if (!latestEvents.length){
-    body.innerHTML = '<div class="events-empty">No event data for this period yet.</div>';
-    return;
+
+  /* ---- group rows into a small tree: root -> page -> event ---- */
+  const byPage = new Map();
+  rows.forEach(r => {
+    if (!byPage.has(r.page)) byPage.set(r.page, []);
+    byPage.get(r.page).push(r);
+  });
+  let pageEntries = [...byPage.entries()]
+    .map(([page, evs]) => ({ page, total: evs.reduce((s,e) => s+e.count, 0), events: evs.slice().sort((a,b) => b.count-a.count) }))
+    .sort((a,b) => b.total - a.total);
+
+  let otherPagesTotal = 0;
+  if (pageEntries.length > EV_MAX_PAGES){
+    otherPagesTotal = pageEntries.slice(EV_MAX_PAGES).reduce((s,p) => s+p.total, 0);
+    pageEntries = pageEntries.slice(0, EV_MAX_PAGES);
   }
 
-  const keyEvents = latestEvents.filter(ev => ev.keyEvent);
-  const otherEvents = latestEvents.filter(ev => !ev.keyEvent);
+  const treeChildren = pageEntries.map(p => {
+    let evs = p.events;
+    let otherEventsTotal = 0;
+    if (evs.length > EV_MAX_EVENTS_PER_PAGE){
+      otherEventsTotal = evs.slice(EV_MAX_EVENTS_PER_PAGE).reduce((s,e) => s+e.count, 0);
+      evs = evs.slice(0, EV_MAX_EVENTS_PER_PAGE);
+    }
+    const children = evs.map(e => ({ name: e.event, value: e.count, keyEvent: e.keyEvent }));
+    if (otherEventsTotal > 0) children.push({ name: 'Other events', value: otherEventsTotal, isBucket: true });
+    return { name: p.page, value: p.total, children };
+  });
+  if (otherPagesTotal > 0) treeChildren.push({ name: 'Other pages', value: otherPagesTotal, isBucket: true });
 
-  function addRow(ev){
-    const row = document.createElement('div');
-    row.className = 'events-row';
-    row.innerHTML =
-      '<span class="en">' + humanizeEventName(ev.name) + '</span>' +
-      '<span class="ec">' + ev.count.toLocaleString() + '</span>';
-    body.appendChild(row);
+  const grandTotal = treeChildren.reduce((s,c) => s+c.value, 0);
+  const evTree = { name: 'events-root', value: grandTotal, children: treeChildren };
+
+  /* ---- flatten into nodes/links, mirroring the Pathway chart's approach ---- */
+  const evNodes = [];
+  const evLinks = [];
+  let evIdc = 0;
+  function addEvNode(t, parent, depth){
+    let color, url, label;
+    if (t.isBucket){
+      color = COLORS.other; url = null; label = t.name;
+    } else if (depth === 0){
+      color = EVENT_COLOR; url = null; label = 'All Events';
+    } else if (depth === 1){
+      color = COLORS[categorize(t.name)]; url = urlFor(t.name); label = friendly(t.name);
+    } else {
+      color = t.keyEvent ? KEY_EVENT_COLOR : EVENT_COLOR; url = null; label = humanizeEventName(t.name);
+    }
+    const node = { id: evIdc++, name: t.name, label, count: t.value, color, url, keyEvent: !!t.keyEvent };
+    evNodes.push(node);
+    if (parent) evLinks.push({ source: parent.id, target: node.id, value: Math.sqrt(t.value), count: t.value });
+    (t.children || []).forEach(c => addEvNode(c, node, depth + 1));
+    return node;
   }
-  function addSectionLabel(text, isKey){
-    const label = document.createElement('div');
-    label.className = 'events-section' + (isKey ? ' is-key' : '');
-    label.textContent = text;
-    body.appendChild(label);
+  addEvNode(evTree, null, 0);
+
+  /* ---- layout (same proportions/margins as the Pathway chart) ---- */
+  const EV_MARGIN = { top: 30, right: 220, bottom: 30, left: 20 };
+  const EV_COLUMN_SPACING = 380;
+  const maxFanOut = Math.max(pageEntries.length, ...pageEntries.map(p => p.events.length + (p.events.length > EV_MAX_EVENTS_PER_PAGE ? 1 : 0)), 1);
+  const EV_HEIGHT = Math.max(400, maxFanOut * 35 + 80);
+  const EV_WIDTH = EV_MARGIN.left + EV_MARGIN.right + EV_COLUMN_SPACING * 2; // 3 fixed columns: root, page, event
+
+  const evSvg = d3.select('#chart')
+    .attr('width', EV_WIDTH)
+    .attr('height', EV_HEIGHT)
+    .attr('viewBox', `0 0 ${EV_WIDTH} ${EV_HEIGHT}`);
+  document.getElementById('chart').setAttribute('width', EV_WIDTH);
+  document.getElementById('chart').setAttribute('height', EV_HEIGHT);
+
+  const evSankeyGen = d3.sankey()
+    .nodeId(d => d.id)
+    .nodeAlign(d3.sankeyLeft)
+    .nodeWidth(12)
+    .nodePadding(6)
+    .extent([[EV_MARGIN.left, EV_MARGIN.top], [EV_WIDTH - EV_MARGIN.right, EV_HEIGHT - EV_MARGIN.bottom]]);
+
+  const evGraph = evSankeyGen({
+    nodes: evNodes.map(d => Object.assign({}, d)),
+    links: evLinks.map(d => Object.assign({}, d)),
+  });
+  evGraph.nodes.forEach(n => { if (n.y1 - n.y0 < 2) { const m=(n.y0+n.y1)/2; n.y0=m-1; n.y1=m+1; } });
+  evGraph.links.forEach(l => { if (l.width < 1.2) l.width = 1.2; });
+
+  /* ---- column headers ---- */
+  const evByDepth = d3.group(evGraph.nodes, d => d.depth);
+  const evHeaderLabels = ['All events', 'Page', 'Event'];
+  const evColSticky = document.getElementById('colSticky');
+  evColSticky.style.width = EV_WIDTH + 'px';
+  evByDepth.forEach((list, depth) => {
+    const x = d3.min(list, d => d.x0);
+    const span = document.createElement('span');
+    span.style.left = x + 'px';
+    span.textContent = evHeaderLabels[depth] || '';
+    evColSticky.appendChild(span);
+  });
+
+  /* ---- links ---- */
+  const evLinkGen = d3.sankeyLinkHorizontal();
+  const evLinkSel = evSvg.append('g').attr('fill','none')
+    .selectAll('path').data(evGraph.links).join('path')
+    .attr('class','link-path')
+    .attr('d', evLinkGen)
+    .attr('stroke', d => d.target.color)
+    .attr('stroke-width', d => d.width)
+    .attr('stroke-opacity', 0.42);
+
+  /* ---- nodes ---- */
+  const evNodeG = evSvg.append('g').selectAll('g')
+    .data(evGraph.nodes).join('g')
+    .style('cursor', d => d.url ? 'pointer' : 'default');
+
+  evNodeG.append('rect')
+    .attr('class', 'hit-rect')
+    .attr('x', d => d.x0)
+    .attr('y', d => Math.min(d.y0, (d.y0 + d.y1) / 2 - 12))
+    .attr('width', d => (d.x1 - d.x0) + 230)
+    .attr('height', d => Math.max(d.y1 - d.y0, 24))
+    .attr('fill', 'transparent');
+
+  evNodeG.append('rect')
+    .attr('class','node-rect')
+    .attr('x', d => d.x0).attr('y', d => d.y0)
+    .attr('width', d => d.x1 - d.x0).attr('height', d => d.y1 - d.y0)
+    .attr('rx', 2).attr('fill', d => d.color)
+    .attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
+
+  evNodeG.append('text')
+    .attr('class', d => 'lbl-name' + (d.depth >= 2 ? ' dim' : ''))
+    .attr('x', d => d.x1 + 7)
+    .attr('y', d => (d.y0 + d.y1) / 2 - (d.depth <= 1 ? 3 : 1))
+    .attr('font-size', d => d.depth === 0 ? 14 : d.depth === 1 ? 12.5 : 11.5)
+    .attr('font-weight', d => d.depth === 0 ? 600 : 500)
+    .attr('dominant-baseline', 'middle')
+    .attr('pointer-events', 'none')
+    .text(d => d.label)
+    .filter(d => !!d.url)
+    .append('tspan').attr('class','link-glyph').attr('dx', 4).attr('font-size', '0.8em').text('↗');
+
+  evNodeG.filter(d => d.depth <= 1).append('text')
+    .attr('class','lbl-val')
+    .attr('x', d => d.x1 + 7)
+    .attr('y', d => (d.y0 + d.y1) / 2 + 11)
+    .attr('font-size', 10.5)
+    .attr('dominant-baseline', 'middle')
+    .attr('pointer-events', 'none')
+    .text(d => d.count.toLocaleString());
+
+  // Small gold dot next to Key Events, since this view has no side-nav
+  // legend to explain the color the way the Pathway view's legend does.
+  evNodeG.filter(d => d.depth === 2 && d.keyEvent).append('text')
+    .attr('class', 'lbl-val')
+    .attr('x', d => d.x1 + 7)
+    .attr('y', d => (d.y0 + d.y1) / 2 + 11)
+    .attr('font-size', 9.5)
+    .attr('fill', KEY_EVENT_COLOR)
+    .attr('dominant-baseline', 'middle')
+    .attr('pointer-events', 'none')
+    .text('★ Key Event');
+
+  /* ---- interaction: simple hover-dim + tooltip + click-to-open ---- */
+  function evDim(exceptLinks, exceptNodes){
+    evLinkSel.attr('stroke-opacity', d => exceptLinks.has(d) ? 0.85 : 0.06);
+    evNodeG.selectAll('.node-rect').attr('fill-opacity', d => exceptNodes.has(d) ? 1 : 0.18);
+  }
+  function evResetDim(){
+    evLinkSel.attr('stroke-opacity', 0.42);
+    evNodeG.selectAll('.node-rect').attr('fill-opacity', d => d.depth === 0 ? 1 : 0.94);
   }
 
-  if (keyEvents.length){
-    addSectionLabel('Key Events', true);
-    keyEvents.forEach(addRow);
-    addSectionLabel('All Events', false);
-  }
-  otherEvents.forEach(addRow);
+  evNodeG.select('.hit-rect')
+    .on('mousemove', (evt) => moveTip(evt))
+    .on('click', (evt, d) => { if (d.url) window.open(d.url, '_blank', 'noopener'); })
+    .on('mouseenter', (evt, d) => {
+      const touching = evGraph.links.filter(l => l.source === d || l.target === d);
+      const touchingNodes = new Set([d]);
+      touching.forEach(l => { touchingNodes.add(l.source); touchingNodes.add(l.target); });
+      evDim(new Set(touching), touchingNodes);
+      const kind = d.depth === 0 ? '' : d.depth === 1 ? '' : (d.keyEvent ? '<div class="t-meta" style="color:' + KEY_EVENT_COLOR + ';margin-top:4px;">★ Key Event</div>' : '');
+      const linkLine = d.url ? '<div class="t-meta" style="color:var(--cyan);margin-top:4px;">↗ click to open page</div>' : '';
+      showTip('<div class="t-path">' + d.label + '</div><div class="t-meta"><span class="t-val">' + d.count.toLocaleString() + '</span>' + (d.depth <= 1 ? ' visits with an event' : ' occurrences') + '</div>' + kind + linkLine, evt);
+    })
+    .on('mouseleave', () => { evResetDim(); hideTip(); });
+
+  evLinkSel
+    .on('mousemove', (evt) => moveTip(evt))
+    .on('mouseenter', (evt, d) => {
+      evDim(new Set([d]), new Set([d.source, d.target]));
+      showTip('<div class="t-path">' + d.source.label + ' → ' + d.target.label + '</div><div class="t-meta"><span class="t-val">' + d.count.toLocaleString() + '</span> occurrences</div>', evt);
+    })
+    .on('mouseleave', () => { evResetDim(); hideTip(); });
 }
-
-function openEventsModal(){ renderEventsModal(); document.getElementById('eventsOverlay').hidden = false; }
-function closeEventsModal(){ document.getElementById('eventsOverlay').hidden = true; }
-
-document.getElementById('eventsBtn').addEventListener('click', openEventsModal);
-document.getElementById('eventsClose').addEventListener('click', closeEventsModal);
-document.getElementById('eventsOverlay').addEventListener('click', (evt) => {
-  if (evt.target.id === 'eventsOverlay') closeEventsModal();
-});
-document.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Escape') closeEventsModal();
-});
 </script>
 </body>
 </html>
